@@ -7,7 +7,7 @@ declare module PIXI {
     export var VERSION: string;
 
     export enum blendModes {
-
+         
         NORMAL,
         ADD,
         MULTIPLY,
