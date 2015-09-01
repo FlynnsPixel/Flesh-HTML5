@@ -9,13 +9,16 @@ class Square {
 window.onload = function() {
 	
 	var padding = 15;
-	var game = new Phaser.Game(window.innerWidth - padding, window.innerHeight - padding, Phaser.CANVAS, null, { preload: preload, create: create, update:update });
+	var game = new Phaser.Game(window.innerWidth - padding, window.innerHeight - padding, Phaser.CANVAS, null, { preload: preload, create: create, update: update, render: render });
 	var logo: Phaser.Sprite;
 	var arr: Array<Square> = [];
 	var button: Phaser.Button;
 	var debug_text: Phaser.BitmapText;
 	var game_layer: Phaser.Group;
 	var ui_layer: Phaser.Group;
+	var batch: Phaser.SpriteBatch;
+	var canvas;
+	var context;
 	
 	window.onresize = function() {
 		resize_game();
@@ -32,7 +35,7 @@ window.onload = function() {
 		
 		resize_game();
 		
-		game.add.plugin(Phaser.Plugin.Debug);
+		//game.add.plugin(Phaser.Plugin.Debug);
 		
 		game.load.image("square", "assets/square.png");
 		game.load.spritesheet("fullscreen_button", "assets/button_sprite_sheet.png", 193, 71);
@@ -40,24 +43,35 @@ window.onload = function() {
 	}
 	
 	function create() {
+		batch = game.add.spriteBatch(null, "batch", true);
 		game_layer = game.add.group();
+		game_layer.z = 0;
 		ui_layer = game.add.group();
+		ui_layer.z = 1;
 		
-		button = game.add.button(0, 0, "fullscreen_button", function() {
+		button = new Phaser.Button(game, 0, 0, "fullscreen_button", function() {
 			game.scale.isFullScreen ? game.scale.stopFullScreen() : game.scale.startFullScreen();
 		}, this, 2, 1, 0);
 		ui_layer.add(button);
 		
-		debug_text = game.add.bitmapText(0, 70, "nokia", "n/a");
+		debug_text = new Phaser.BitmapText(game, 0, 70, "nokia", "n/a");
+		ui_layer.add(debug_text);
 		game.time.advancedTiming = true;
 		
 		spawn_squares(1);
 		
-		game.physics.startSystem(Phaser.Physics.ARCADE);
+		//game.physics.startSystem(Phaser.Physics.ARCADE);
 		
 		game.input.mouse.capture = true;
 		
 		// if (game.renderer instanceof PIXI.CanvasRenderer) { }
+		
+		canvas = document.createElement("canvas");
+		canvas.width = 64;
+		canvas.height = 64;
+		context = canvas.getContext("2d");
+		context.fillStyle = "#ff0000";
+		context.fillRect(0, 0, 64, 64);		
 	}
 	
 	function spawn_squares(num: number) {
@@ -65,6 +79,7 @@ window.onload = function() {
 			var square = new Square();
 			square.base = game.add.sprite(Math.random() * game.width, Math.random() * game.height, "square");
 			square.base.anchor.setTo(0.0, 0.0);
+			//batch.add(square.base);
 			game_layer.add(square.base);
 			square.angle = Math.random() * Math.PI * 2.0;
 			arr.push(square);
@@ -72,7 +87,7 @@ window.onload = function() {
 	}
 	
 	function update() {
-		debug_text.text = "fps: " + game.time.fps;
+		debug_text.text = "fps: " + game.time.fps + "\nspawned: " + arr.length;
 		debug_text.update();
 		
 		for (var n = 0; n < arr.length; ++n) {
@@ -91,5 +106,11 @@ window.onload = function() {
 		if (game.input.activePointer.isDown) {
 			spawn_squares(5);
 		}
+	}
+	
+	function render() {
+		//context.drawImage(canvas, 0, 0);
+		
+		requestAnimationFrame(render);
 	}
 };
