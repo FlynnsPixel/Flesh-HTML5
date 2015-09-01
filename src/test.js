@@ -1,5 +1,4 @@
-/// <reference path="../phaser/phaser.d.ts" />
-/// <reference path="../phaser/phaser.d.ts" />
+/// <reference path="../phaser/phaser.comments.d.ts" />
 var Square = (function () {
     function Square() {
     }
@@ -11,7 +10,18 @@ window.onload = function () {
     var game = new Phaser.Game(window.innerWidth - padding, window.innerHeight - padding, Phaser.CANVAS, null, { preload: preload, create: create, update: update });
     var logo;
     var arr = [];
+    window.onresize = function () {
+        resize_game();
+    };
+    function resize_game() {
+        game.scale.setGameSize(window.innerWidth - padding, window.innerHeight - padding);
+        game.paused = false;
+    }
     function preload() {
+        game.scale.scaleMode = Phaser.ScaleManager.USER_SCALE;
+        game.scale.forceOrientation(true, false);
+        game.scale.refresh();
+        resize_game();
         game.add.plugin(Phaser.Plugin.Debug);
         game.load.image("square", "assets/square.png");
     }

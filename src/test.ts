@@ -1,5 +1,4 @@
-/// <reference path="../phaser/phaser.d.ts" />
-/// <reference path="../phaser/phaser.d.ts" />
+/// <reference path="../phaser/phaser.comments.d.ts" />
 
 class Square {
 	
@@ -14,7 +13,21 @@ window.onload = function() {
 	var logo: Phaser.Sprite;
 	var arr: Array<Square> = [];
 	
+	function resize_game() {
+		game.scale.setGameSize(window.innerWidth - padding, window.innerHeight - padding);
+		game.paused = false;
+	}
+	window.onresize = function() {
+		resize_game();
+	}
+	
 	function preload() {
+		game.scale.scaleMode = Phaser.ScaleManager.USER_SCALE;
+		game.scale.forceOrientation(true, false);
+		game.scale.refresh();
+		
+		resize_game();
+		
 		game.add.plugin(Phaser.Plugin.Debug);
 		
 		game.load.image("square", "assets/square.png");
