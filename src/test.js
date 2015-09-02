@@ -14,7 +14,8 @@ window.onload = function () {
     var ui_layer;
     var batch;
     var cat;
-    var dest_scale = 1;
+    var dest_game_zoom = 1;
+    var ZOOM_VALUE = .04;
     window.onresize = function () {
         resize_game();
     };
@@ -55,6 +56,10 @@ window.onload = function () {
         game_layer.pivot.y = game.height * .5;
         game_layer.x = game.width * .5;
         game_layer.y = game.height * .5;
+        game.input.mouse.mouseWheelCallback = mouse_wheel_event;
+        function mouse_wheel_event(event) {
+            dest_game_zoom += game.input.mouse.wheelDelta * ZOOM_VALUE;
+        }
     }
     function update() {
         debug_text.text = "fps: " + game.time.fps;
@@ -64,13 +69,13 @@ window.onload = function () {
             cat.body.velocity.x = 400;
         }
         if (game.input.keyboard.isDown(Phaser.Keyboard.UNDERSCORE)) {
-            dest_scale -= .04;
+            dest_game_zoom -= ZOOM_VALUE;
         }
         if (game.input.keyboard.isDown(Phaser.Keyboard.EQUALS)) {
-            dest_scale += .04;
+            dest_game_zoom += ZOOM_VALUE;
         }
-        dest_scale = Phaser.Math.clamp(dest_scale, .2, 4.0);
-        game_layer.scale.x -= (game_layer.scale.x - dest_scale) / 4.0;
-        game_layer.scale.y -= (game_layer.scale.y - dest_scale) / 4.0;
+        dest_game_zoom = Phaser.Math.clamp(dest_game_zoom, .2, 4.0);
+        game_layer.scale.x -= (game_layer.scale.x - dest_game_zoom) / 4.0;
+        game_layer.scale.y -= (game_layer.scale.y - dest_game_zoom) / 4.0;
     }
 };
