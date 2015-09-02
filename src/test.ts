@@ -70,24 +70,24 @@ window.onload = function() {
 	document.onmousedown = mouse_down;
 	document.onmouseup = mouse_up;
 	
-	var vertices = new Float32Array(10);
-	vertices[0] = 0;
-	vertices[1] = 0;
-	vertices[2] = 1;
-	vertices[3] = 0;
-	vertices[4] = 1;
-	vertices[5] = 1;
-	vertices[6] = 0;
-	vertices[7] = 1;
-	vertices[8] = 0;
-	vertices[9] = 0;
-	var indices = new Uint16Array(5);
+	PIXI.loader.add("terrain", "assets/terrain.txt");
+	PIXI.loader.load(function(loader, resources) {
+		console.log(resources.terrain.error);
+		console.log(JSON.parse(resources.terrain.data));
+	});
+	
+	var vertices = new Float32Array(6);
+	vertices[0] = 200;
+	vertices[1] = -50;
+	vertices[2] = 57;
+	vertices[3] = 29;
+	vertices[4] = 57;
+	vertices[5] = 200;
+	var indices = new Uint16Array(3);
 	indices[0] = 0;
 	indices[1] = 1;
 	indices[2] = 2;
-	indices[3] = 3;
-	indices[4] = 4;
-	var uvs = new Float32Array(10);
+	var uvs = new Float32Array(6);
 	uvs[0] = 0;
 	uvs[1] = 0;
 	uvs[2] = 1;
@@ -98,8 +98,8 @@ window.onload = function() {
 	uvs[7] = 1;
 	uvs[8] = 0;
 	uvs[9] = 0;
-	var a = new PIXI.mesh.Mesh(square_tex, vertices, uvs, indices, PIXI.mesh.Mesh.DRAW_MODES.TRIANGLE_MESH);
-	a.scale.set(26, 37);
+	var a = new PIXI.mesh.Mesh(square_tex, vertices, uvs, indices, PIXI.mesh.Mesh.DRAW_MODES.TRIANGLES);
+	//a.scale.set(26, 37);
 	stage.addChild(a);
 }
 
