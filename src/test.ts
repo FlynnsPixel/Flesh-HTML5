@@ -72,35 +72,30 @@ window.onload = function() {
 	
 	PIXI.loader.add("terrain", "assets/terrain.txt");
 	PIXI.loader.load(function(loader, resources) {
-		console.log(resources.terrain.error);
-		console.log(JSON.parse(resources.terrain.data));
+		if (resources.terrain.error) console.log("error occurred while loading resource: " + resources.terrain.error);
+		
+		var terrain = JSON.parse(resources.terrain.data).terrain[0];
+		console.log(terrain);
+		var vertices = new Float32Array(terrain.vertex_data.length);
+		for (var n = 0; n < vertices.length; ++n) {
+			vertices[n] = terrain.vertex_data[n];
+			//flip all y vertices because of renderer coord system
+			if (n % 2 == 1) vertices[n] = -vertices[n];
+		}
+		var indices = new Uint16Array(terrain.indices.length);
+		for (var n = 0; n < indices.length; ++n) {
+			indices[n] = terrain.indices[n];
+		}
+		var uvs = new Float32Array(terrain.uvs.length);
+		for (var n = 0; n < uvs.length; ++n) {
+			uvs[n] = terrain.uvs[n];	
+		}
+		var a = new PIXI.mesh.Mesh(PIXI.Texture.fromImage("assets/mossy_fill.png"), vertices, uvs, indices, PIXI.mesh.Mesh.DRAW_MODES.TRIANGLES);
+		a.x = 400;
+		a.y = 400;
+		a.scale.set(4.0, 4.0);
+		stage.addChild(a);
 	});
-	
-	var vertices = new Float32Array(6);
-	vertices[0] = 200;
-	vertices[1] = -50;
-	vertices[2] = 57;
-	vertices[3] = 29;
-	vertices[4] = 57;
-	vertices[5] = 200;
-	var indices = new Uint16Array(3);
-	indices[0] = 0;
-	indices[1] = 1;
-	indices[2] = 2;
-	var uvs = new Float32Array(6);
-	uvs[0] = 0;
-	uvs[1] = 0;
-	uvs[2] = 1;
-	uvs[3] = 0;
-	uvs[4] = 1;
-	uvs[5] = 1;
-	uvs[6] = 0;
-	uvs[7] = 1;
-	uvs[8] = 0;
-	uvs[9] = 0;
-	var a = new PIXI.mesh.Mesh(square_tex, vertices, uvs, indices, PIXI.mesh.Mesh.DRAW_MODES.TRIANGLES);
-	//a.scale.set(26, 37);
-	stage.addChild(a);
 }
 
 function mouse_down() {	
