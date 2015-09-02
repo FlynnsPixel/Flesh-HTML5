@@ -30,7 +30,6 @@ function spawn_square(amount) {
         square.base.x = Math.random() * renderer.width;
         square.base.y = Math.random() * renderer.height;
         square.angle = Math.random() * Math.PI * 2.0;
-        square.base.filters = [new PIXI.filters.SepiaFilter()];
         stage.addChild(square.base);
         squares.push(square);
     }
@@ -57,6 +56,8 @@ window.onload = function () {
     document.ontouchend = mouse_up;
     document.onmousedown = mouse_down;
     document.onmouseup = mouse_up;
+    var forest_fill = PIXI.Texture.fromImage("assets/forest_fill.png");
+    var forest_edges = PIXI.Texture.fromImage("assets/forest_edges.png");
     PIXI.loader.add("terrain", "assets/terrain.txt");
     PIXI.loader.load(function (loader, resources) {
         if (resources.terrain.error)
@@ -65,6 +66,8 @@ window.onload = function () {
         for (var i = 0; i < terrain_arr.length; ++i) {
             var terrain = terrain_arr[i];
             console.log(terrain);
+            var fill_indices = terrain.fill_indices;
+            var edge_indices = terrain.edge_indices;
             var vertices = new Float32Array(terrain.vertex_data.length);
             for (var n = 0; n < vertices.length; ++n) {
                 vertices[n] = terrain.vertex_data[n];
@@ -72,19 +75,30 @@ window.onload = function () {
                 if (n % 2 == 1)
                     vertices[n] = -vertices[n];
             }
-            var indices = new Uint16Array(terrain.indices.length);
-            for (var n = 0; n < indices.length; ++n) {
+            var indices = new Uint16Array(fill_indices[1]);
+            for (var n = fill_indices[0]; n < fill_indices[1]; ++n) {
                 indices[n] = terrain.indices[n];
             }
             var uvs = new Float32Array(terrain.uvs.length);
             for (var n = 0; n < uvs.length; ++n) {
                 uvs[n] = terrain.uvs[n];
+                if (n % 2 == 1)
+                    uvs[n] = -uvs[n];
             }
-            var mesh = new PIXI.mesh.Mesh(PIXI.Texture.fromImage("assets/mossy_fill.png"), vertices, uvs, indices, PIXI.mesh.Mesh.DRAW_MODES.TRIANGLES);
-            mesh.scale.set(4.0, 4.0);
-            mesh.x = (terrain.pos[0] * mesh.scale.x) + 400;
-            mesh.y = (-terrain.pos[1] * mesh.scale.y) + 400;
-            stage.addChild(mesh);
+            var mesh_fill = new PIXI.mesh.Mesh(forest_fill, vertices, uvs, indices, PIXI.mesh.Mesh.DRAW_MODES.TRIANGLES);
+            mesh_fill.scale.set(12.0, 12.0);
+            mesh_fill.x = (terrain.pos[0] * mesh_fill.scale.x) - 400;
+            mesh_fill.y = (-terrain.pos[1] * mesh_fill.scale.y) + 400;
+            stage.addChild(mesh_fill);
+            indices = new Uint16Array(terrain.indices.length - fill_indices[1]);
+            for (var n = fill_indices[1]; n < terrain.indices.length; ++n) {
+                indices[n - fill_indices[1]] = terrain.indices[n];
+            }
+            var mesh_edges = new PIXI.mesh.Mesh(forest_edges, vertices, uvs, indices, PIXI.mesh.Mesh.DRAW_MODES.TRIANGLES);
+            mesh_edges.scale.set(12.0, 12.0);
+            mesh_edges.x = (terrain.pos[0] * mesh_edges.scale.x) - 400;
+            mesh_edges.y = (-terrain.pos[1] * mesh_edges.scale.y) + 400;
+            stage.addChild(mesh_edges);
         }
     });
 };
