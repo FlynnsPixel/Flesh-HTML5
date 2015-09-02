@@ -74,27 +74,32 @@ window.onload = function() {
 	PIXI.loader.load(function(loader, resources) {
 		if (resources.terrain.error) console.log("error occurred while loading resource: " + resources.terrain.error);
 		
-		var terrain = JSON.parse(resources.terrain.data).terrain[0];
-		console.log(terrain);
-		var vertices = new Float32Array(terrain.vertex_data.length);
-		for (var n = 0; n < vertices.length; ++n) {
-			vertices[n] = terrain.vertex_data[n];
-			//flip all y vertices because of renderer coord system
-			if (n % 2 == 1) vertices[n] = -vertices[n];
+		var terrain_arr = JSON.parse(resources.terrain.data).terrain;
+		
+		for (var i = 0; i < terrain_arr.length; ++i) {
+			var terrain = terrain_arr[i];
+			console.log(terrain);
+			
+			var vertices = new Float32Array(terrain.vertex_data.length);
+			for (var n = 0; n < vertices.length; ++n) {
+				vertices[n] = terrain.vertex_data[n];
+				//flip all y vertices because of renderer coord system
+				if (n % 2 == 1) vertices[n] = -vertices[n];
+			}
+			var indices = new Uint16Array(terrain.indices.length);
+			for (var n = 0; n < indices.length; ++n) {
+				indices[n] = terrain.indices[n];
+			}
+			var uvs = new Float32Array(terrain.uvs.length);
+			for (var n = 0; n < uvs.length; ++n) {
+				uvs[n] = terrain.uvs[n];	
+			}
+			var mesh = new PIXI.mesh.Mesh(PIXI.Texture.fromImage("assets/mossy_fill.png"), vertices, uvs, indices, PIXI.mesh.Mesh.DRAW_MODES.TRIANGLES);
+			mesh.scale.set(4.0, 4.0);
+			mesh.x = (terrain.pos[0] * mesh.scale.x) + 400;
+			mesh.y = (-terrain.pos[1] * mesh.scale.y) + 400;
+			stage.addChild(mesh);
 		}
-		var indices = new Uint16Array(terrain.indices.length);
-		for (var n = 0; n < indices.length; ++n) {
-			indices[n] = terrain.indices[n];
-		}
-		var uvs = new Float32Array(terrain.uvs.length);
-		for (var n = 0; n < uvs.length; ++n) {
-			uvs[n] = terrain.uvs[n];	
-		}
-		var a = new PIXI.mesh.Mesh(PIXI.Texture.fromImage("assets/mossy_fill.png"), vertices, uvs, indices, PIXI.mesh.Mesh.DRAW_MODES.TRIANGLES);
-		a.x = 400;
-		a.y = 400;
-		a.scale.set(4.0, 4.0);
-		stage.addChild(a);
 	});
 }
 

@@ -1,4 +1,0 @@
-{ "employees" : [
-    {"vertex_data": [1, 4, 5, 21, 8] }
-]
-}
