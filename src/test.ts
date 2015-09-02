@@ -9,16 +9,14 @@ class Square {
 window.onload = function() {
 	
 	var padding = 15;
-	var game = new Phaser.Game(window.innerWidth - padding, window.innerHeight - padding, Phaser.CANVAS, null, { preload: preload, create: create, update: update, render: render });
-	var logo: Phaser.Sprite;
-	var arr: Array<Square> = [];
+	var game = new Phaser.Game(window.innerWidth - padding, window.innerHeight - padding, Phaser.CANVAS, null, { preload: preload, create: create, update: update });
 	var button: Phaser.Button;
 	var debug_text: Phaser.BitmapText;
 	var game_layer: Phaser.Group;
 	var ui_layer: Phaser.Group;
 	var batch: Phaser.SpriteBatch;
-	var canvas;
-	var context;
+	var cat: Phaser.Sprite;
+	var dest_scale: number = 1;
 	
 	window.onresize = function() {
 		resize_game();
@@ -26,6 +24,7 @@ window.onload = function() {
 	function resize_game() {
 		game.scale.setGameSize(window.innerWidth - padding, window.innerHeight - padding);
 		game.paused = false;
+		game.world.setBounds(-game.width * 2.0, -game.height * 2.0, game.width * 4.0, game.height * 4.0);
 	}
 	
 	function preload() {
@@ -37,7 +36,7 @@ window.onload = function() {
 		
 		//game.add.plugin(Phaser.Plugin.Debug);
 		
-		game.load.image("square", "assets/square.png");
+		game.load.image("cat_base", "assets/chars/cat_base.png");
 		game.load.spritesheet("fullscreen_button", "assets/button_sprite_sheet.png", 193, 71);
 		game.load.bitmapFont("nokia", "assets/fonts/nokia16.png", "assets/fonts/nokia16.xml");
 	}
@@ -58,59 +57,36 @@ window.onload = function() {
 		ui_layer.add(debug_text);
 		game.time.advancedTiming = true;
 		
-		spawn_squares(1);
-		
 		//game.physics.startSystem(Phaser.Physics.ARCADE);
 		
-		game.input.mouse.capture = true;
+		cat = new Phaser.Sprite(game, 200, 400, "cat_base");
+		game_layer.add(cat);
 		
-		// if (game.renderer instanceof PIXI.CanvasRenderer) { }
+		//game.physics.startSystem(Phaser.Physics.P2JS);
+    	//game.physics.p2.enable(cat);
 		
-		canvas = document.createElement("canvas");
-		canvas.width = 64;
-		canvas.height = 64;
-		context = canvas.getContext("2d");
-		context.fillStyle = "#ff0000";
-		context.fillRect(0, 0, 64, 64);		
-	}
-	
-	function spawn_squares(num: number) {
-		for (var n = 0; n < num; ++n) {
-			var square = new Square();
-			square.base = game.add.sprite(Math.random() * game.width, Math.random() * game.height, "square");
-			square.base.anchor.setTo(0.0, 0.0);
-			//batch.add(square.base);
-			game_layer.add(square.base);
-			square.angle = Math.random() * Math.PI * 2.0;
-			arr.push(square);
-		}
+		game_layer.pivot.x = game.width * .5;
+		game_layer.pivot.y = game.height * .5;
+		game_layer.x = game.width * .5;
+		game_layer.y = game.height * .5;
 	}
 	
 	function update() {
-		debug_text.text = "fps: " + game.time.fps + "\nspawned: " + arr.length;
+		debug_text.text = "fps: " + game.time.fps;
 		debug_text.update();
 		
-		for (var n = 0; n < arr.length; ++n) {
-			var square = arr[n];
-			if (square.base.position.x < 0 || square.base.position.x > game.width - square.base.width) {
-				square.angle = -square.angle + Math.PI;
-			}
-			if (square.base.position.y < 0 || square.base.position.y > game.height - square.base.height) {
-				square.angle = -square.angle;
-			}
-			square.base.position.x += Math.cos(square.angle) * 4.0;
-			square.base.position.y += Math.sin(square.angle) * 4.0;
+		if (game.input.keyboard.isDown(Phaser.Keyboard.RIGHT)) {
+			//game.world.camera.position.x += 1;
+			cat.body.velocity.x = 400;
 		}
-		
-		//if (game.input.keyboard.isDown(Phaser.Keyboard.RIGHT)) { }
-		if (game.input.activePointer.isDown) {
-			spawn_squares(5);
+		if (game.input.keyboard.isDown(Phaser.Keyboard.UNDERSCORE)) {
+			dest_scale -= .04;
 		}
-	}
-	
-	function render() {
-		//context.drawImage(canvas, 0, 0);
-		
-		requestAnimationFrame(render);
+		if (game.input.keyboard.isDown(Phaser.Keyboard.EQUALS)) {
+			dest_scale += .04;
+		}
+		dest_scale = Phaser.Math.clamp(dest_scale, .2, 4.0);
+		game_layer.scale.x -= (game_layer.scale.x - dest_scale) / 4.0;
+		game_layer.scale.y -= (game_layer.scale.y - dest_scale) / 4.0;
 	}
 };
