@@ -16,15 +16,16 @@ class TerrainMesh {
 	mesh: PIXI.mesh.Mesh;
 	type: TerrainGeometryType;
 	parent: Terrain;
-	private tex: PIXI.Texture;
-	
-	static_vertices: Float32Array[];
-	static_indices: Uint16Array[];
-	static_uvs: Float32Array[];
 	
 	dynamic_vertices: number[];
 	dynamic_indices: number[];
 	dynamic_uvs: number[];
+	
+	private static_vertices: Float32Array[];
+	private static_indices: Uint16Array[];
+	private static_uvs: Float32Array[];
+	
+	private tex: PIXI.Texture;
 	
 	constructor(parent_obj: Terrain, json_obj, geometry_type: TerrainGeometryType) {
 		this.parent = parent_obj;
@@ -67,6 +68,11 @@ class TerrainMesh {
 		this.mesh.y = (-json_obj.pos[1] * this.mesh.scale.y) + 400;
 		this.parent.container.addChild(this.mesh);
 	}
+	
+	get_tex(): PIXI.Texture { return this.tex; }
+	get_static_vertices(): Float32Array[] { return this.static_vertices; }
+	get_static_indices(): Uint16Array[] { return this.static_indices; }
+	get_static_uvs(): Float32Array[] { return this.static_uvs; }
 };
 
 class Terrain {

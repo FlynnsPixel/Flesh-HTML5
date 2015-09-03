@@ -52,6 +52,10 @@ var TerrainMesh = (function () {
         this.mesh.y = (-json_obj.pos[1] * this.mesh.scale.y) + 400;
         this.parent.container.addChild(this.mesh);
     }
+    TerrainMesh.prototype.get_tex = function () { return this.tex; };
+    TerrainMesh.prototype.get_static_vertices = function () { return this.static_vertices; };
+    TerrainMesh.prototype.get_static_indices = function () { return this.static_indices; };
+    TerrainMesh.prototype.get_static_uvs = function () { return this.static_uvs; };
     return TerrainMesh;
 })();
 ;
