@@ -6,6 +6,95 @@ class Square {
 	angle: number;
 };
 
+enum TerrainGeometryType {
+	FILL, 
+	EDGES
+};
+
+class TerrainMesh {
+	
+	static_vertices: Float32Array[];
+	static_indices: Uint16Array[];
+	static_uvs: Float32Array[];
+	
+	dynamic_vertices: number[];
+	dynamic_indices: number[];
+	dynamic_uvs: number[];
+	
+	type: TerrainGeometryType;
+	
+	constructor(json_obj, geometry_type: TerrainGeometryType) {
+		this.type = geometry_type;
+		var fill_indices = json_obj.fill_indices;
+		var edge_indices = json_obj.edge_indices;
+		
+		var vertices = new Float32Array(json_obj.vertex_data.length);
+		for (var n = 0; n < vertices.length; ++n) {
+			vertices[n] = json_obj.vertex_data[n];
+			//flip all y vertices because of renderer coord system
+			if (n % 2 == 1) vertices[n] = -vertices[n];
+		}
+		var indices = new Uint16Array(fill_indices[1]);
+		var p = fill_indices[0];
+		for (var n: number = fill_indices[0]; n < fill_indices[1]; ++n) {
+			indices[p] = json_obj.indices[n];
+			++p;
+		}
+		var indices_arr = [];
+		p = 0;
+		for (var n = 0; n < indices.length; ++n) {
+			indices_arr[p] = indices[n];
+			if (vertices[indices_arr[p] * 2] >= 10 && vertices[(indices_arr[p] * 2) + 1] >= -8 &&
+				vertices[indices_arr[p] * 2] <= 24 && vertices[(indices_arr[p] * 2) + 1] <= 8) {
+				p -= n % 3;
+				--p;
+				n += 2 - (n % 3);
+			}
+			++p;
+		}
+		indices = new Uint16Array(indices_arr);
+		
+		var uvs = new Float32Array(json_obj.uvs.length);
+		for (var n = 0; n < uvs.length; ++n) {
+			uvs[n] = json_obj.uvs[n];
+			if (n % 2 == 1) uvs[n] = -uvs[n];
+		}
+		var mesh_fill = new PIXI.mesh.Mesh(forest_fill, vertices, uvs, indices, PIXI.mesh.Mesh.DRAW_MODES.TRIANGLES);
+		mesh_fill.scale.set(15.0, 15.0);
+		mesh_fill.x = (json_obj.pos[0] * mesh_fill.scale.x) + 0;
+		mesh_fill.y = (-json_obj.pos[1] * mesh_fill.scale.y) + 400;
+		stage.addChild(mesh_fill);	
+	}
+};
+
+class Terrain {
+	
+	fill_mesh: TerrainMesh;
+	edges_mesh: TerrainMesh;
+	
+	public constructor(json_obj) {
+		this.fill_mesh = new TerrainMesh(json_obj, TerrainGeometryType.FILL);
+		this.edges_mesh = new TerrainMesh(json_obj, TerrainGeometryType.EDGES);
+	}
+};
+
+var forest_fill: PIXI.Texture;
+var forest_edges: PIXI.Texture;
+
+class TerrainContainer {
+	
+	terrain_list: Terrain[] = [];
+	
+	constructor(complete_json_data) {
+		for (var i = 0; i < complete_json_data.length; ++i) {
+			var terrain_obj = complete_json_data[i];
+			console.log(terrain_obj);
+			var terrain = new Terrain(terrain_obj);
+			this.terrain_list.push(terrain);
+		}
+	}
+};
+
 var stage: PIXI.Container;
 var renderer: PIXI.CanvasRenderer | PIXI.WebGLRenderer;
 const padding = 15;
@@ -57,7 +146,7 @@ window.onload = function() {
 	container = new PIXI.ParticleContainer(100000, [false, true, false, false, false]);
 	stage.addChild(container);
 	
-	square_tex = PIXI.Texture.fromImage("assets/bunny.png");
+	PIXI.loader.add("bunny", "assets/bunny.png");
 	
 	spawn_square(1);
 	resize_canvas();
@@ -68,83 +157,20 @@ window.onload = function() {
 	document.onmousedown = mouse_down;
 	document.onmouseup = mouse_up;
 	
-	var forest_fill = PIXI.Texture.fromImage("assets/forest_fill.png");
-	var forest_edges = PIXI.Texture.fromImage("assets/forest_edges.png");
+	PIXI.loader.add("forest_fill", "assets/forest_fill.png");
+	PIXI.loader.add("forest_edges", "assets/forest_edges.png");
 	
 	PIXI.loader.add("terrain", "assets/terrain.txt");
 	PIXI.loader.load(function(loader, resources) {
-		if (resources.terrain.error) console.log("error occurred while loading resource: " + resources.terrain.error);
+		square_tex = resources.bunny.texture;
+		forest_fill = resources.forest_fill.texture;
+		forest_edges = resources.forest_edges.texture;
+		console.log(resources["bunny"]);
+		
+		if (resources.terrain.error) console.log("error occurred while loading resources: " + resources.terrain.error);
 		
 		var terrain_arr = JSON.parse(resources.terrain.data).terrain;
-		
-		for (var i = 0; i < terrain_arr.length; ++i) {
-			var terrain = terrain_arr[i];
-			console.log(terrain);
-			
-			var fill_indices = terrain.fill_indices;
-			var edge_indices = terrain.edge_indices;
-			
-			var vertices = new Float32Array(terrain.vertex_data.length);
-			for (var n = 0; n < vertices.length; ++n) {
-				vertices[n] = terrain.vertex_data[n];
-				//flip all y vertices because of renderer coord system
-				if (n % 2 == 1) vertices[n] = -vertices[n];
-			}
-			var indices = new Uint16Array(fill_indices[1]);
-			var p = fill_indices[0];
-			for (var n: number = fill_indices[0]; n < fill_indices[1]; ++n) {
-				indices[p] = terrain.indices[n];
-				++p;
-			}
-			var indices_arr = [];
-			p = 0;
-			for (var n = 0; n < indices.length; ++n) {
-				indices_arr[p] = indices[n];
-				if (vertices[indices_arr[p] * 2] >= 10 && vertices[(indices_arr[p] * 2) + 1] >= -8 &&
-					vertices[indices_arr[p] * 2] <= 24 && vertices[(indices_arr[p] * 2) + 1] <= 8) {
-					p -= n % 3;
-					--p;
-					n += 2 - (n % 3);
-				}
-				++p;
-			}
-			indices = new Uint16Array(indices_arr);
-			
-			var uvs = new Float32Array(terrain.uvs.length);
-			for (var n = 0; n < uvs.length; ++n) {
-				uvs[n] = terrain.uvs[n];
-				if (n % 2 == 1) uvs[n] = -uvs[n];
-			}
-			var mesh_fill = new PIXI.mesh.Mesh(forest_fill, vertices, uvs, indices, PIXI.mesh.Mesh.DRAW_MODES.TRIANGLES);
-			mesh_fill.scale.set(15.0, 15.0);
-			mesh_fill.x = (terrain.pos[0] * mesh_fill.scale.x) + 0;
-			mesh_fill.y = (-terrain.pos[1] * mesh_fill.scale.y) + 400;
-			stage.addChild(mesh_fill);
-			
-			indices = new Uint16Array(terrain.indices.length - fill_indices[1]);
-			for (var n: number = fill_indices[1]; n < terrain.indices.length; ++n) {
-				indices[n - fill_indices[1]] = terrain.indices[n];
-			}
-			var indices_arr = [];
-			p = 0;
-			for (var n = 0; n < indices.length; ++n) {
-				indices_arr[p] = indices[n];
-				if (vertices[indices_arr[p] * 2] >= 10 && vertices[(indices_arr[p] * 2) + 1] >= -8 &&
-					vertices[indices_arr[p] * 2] <= 24 && vertices[(indices_arr[p] * 2) + 1] <= 8) {
-					p -= n % 3;
-					--p;
-					n += 2 - (n % 3);
-				}
-				++p;
-			}
-			indices = new Uint16Array(indices_arr);
-			
-			var mesh_edges = new PIXI.mesh.Mesh(forest_edges, vertices, uvs, indices, PIXI.mesh.Mesh.DRAW_MODES.TRIANGLES);
-			mesh_edges.scale.set(15.0, 15.0);
-			mesh_edges.x = (terrain.pos[0] * mesh_edges.scale.x) + 0;
-			mesh_edges.y = (-terrain.pos[1] * mesh_edges.scale.y) + 400;
-			stage.addChild(mesh_edges);
-		}
+		var terrain_container = new TerrainContainer(terrain_arr);
 	});
 }
 
