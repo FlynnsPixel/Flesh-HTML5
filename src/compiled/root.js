@@ -10,6 +10,7 @@ var padding = 15;
 var squares = [];
 var container;
 var is_adding;
+var render_sprite;
 window.onresize = function () {
     resize_canvas();
 };
@@ -46,10 +47,20 @@ window.onload = function () {
         var terrain_arr = JSON.parse(raw_terrain).terrain;
         var terrain_container = new TerrainContainer(terrain_arr);
         var render_tex;
-        render_tex = new PIXI.RenderTexture(renderer, renderer.width - 40, renderer.height - 40);
-        render_tex.render(terrain_container.container, null, true);
-        var s = new PIXI.Sprite(render_tex);
-        stage.addChild(s);
+        render_tex = new PIXI.RenderTexture(renderer, terrain_container.width, terrain_container.height);
+        var c = new PIXI.Container();
+        var bg = new PIXI.Sprite(texture_forest_fill);
+        bg.scale.x = 80;
+        bg.scale.y = 80;
+        c.addChild(bg);
+        c.addChild(terrain_container.container);
+        render_tex.render(c, null, true);
+        render_sprite = new PIXI.Sprite(render_tex);
+        stage.addChild(render_sprite);
+        render_sprite.pivot.x = terrain_container.width / 2.0;
+        render_sprite.pivot.y = terrain_container.height / 2.0;
+        render_sprite.position.x = renderer.width / 2.0;
+        render_sprite.position.y = renderer.height / 2.0;
         spawn_square(1);
         game_loop();
         document.ontouchstart = mouse_down;
@@ -83,8 +94,10 @@ var fps = {
 function game_loop() {
     setTimeout(game_loop, 1000.0 / 60.0);
     fps.getFPS();
-    if (is_adding)
-        spawn_square(100);
+    if (is_adding) {
+        render_sprite.scale.x -= .01;
+        render_sprite.scale.y -= .01;
+    }
     for (var n = 0; n < squares.length; ++n) {
         var square = squares[n];
         if (square.base.position.x < 0 || square.base.position.x > renderer.width - square.base.width) {
