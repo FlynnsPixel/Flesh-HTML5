@@ -13,6 +13,11 @@ enum TerrainGeometryType {
 
 class TerrainMesh {
 	
+	mesh: PIXI.mesh.Mesh;
+	type: TerrainGeometryType;
+	parent: Terrain;
+	private tex: PIXI.Texture;
+	
 	static_vertices: Float32Array[];
 	static_indices: Uint16Array[];
 	static_uvs: Float32Array[];
@@ -21,13 +26,21 @@ class TerrainMesh {
 	dynamic_indices: number[];
 	dynamic_uvs: number[];
 	
-	type: TerrainGeometryType;
-	
-	constructor(json_obj, geometry_type: TerrainGeometryType) {
+	constructor(parent_obj: Terrain, json_obj, geometry_type: TerrainGeometryType) {
+		this.parent = parent_obj;
 		this.type = geometry_type;
+		
 		var indices_arr;
-		if (this.type == TerrainGeometryType.FILL) indices_arr = json_obj.fill_indices;
-		else if (this.type == TerrainGeometryType.EDGES) indices_arr = json_obj.edge_indices;
+		switch (this.type) {
+			case TerrainGeometryType.FILL:
+				indices_arr = json_obj.fill_indices;
+				this.tex = forest_fill;
+				break;
+			case TerrainGeometryType.EDGES:
+				indices_arr = json_obj.edge_indices;
+				this.tex = forest_edges;
+				break;
+		}
 		var indices_start = indices_arr[0];
 		var indices_size = indices_arr[1];
 		
@@ -48,11 +61,11 @@ class TerrainMesh {
 			//flip all y uvs because of renderer coord system
 			if (n % 2 == 1) uvs[n] = -uvs[n];
 		}
-		var mesh_fill = new PIXI.mesh.Mesh(forest_fill, vertices, uvs, indices, PIXI.mesh.Mesh.DRAW_MODES.TRIANGLES);
-		mesh_fill.scale.set(15.0, 15.0);
-		mesh_fill.x = (json_obj.pos[0] * mesh_fill.scale.x) + 0;
-		mesh_fill.y = (-json_obj.pos[1] * mesh_fill.scale.y) + 400;
-		stage.addChild(mesh_fill);	
+		this.mesh = new PIXI.mesh.Mesh(this.tex, vertices, uvs, indices, PIXI.mesh.Mesh.DRAW_MODES.TRIANGLES);
+		this.mesh.scale.set(15.0, 15.0);
+		this.mesh.x = (json_obj.pos[0] * this.mesh.scale.x) + 0;
+		this.mesh.y = (-json_obj.pos[1] * this.mesh.scale.y) + 400;
+		this.parent.container.addChild(this.mesh);
 	}
 };
 
@@ -60,10 +73,16 @@ class Terrain {
 	
 	fill_mesh: TerrainMesh;
 	edges_mesh: TerrainMesh;
+	container: PIXI.Container;
+	parent: TerrainContainer;
 	
-	public constructor(json_obj) {
-		this.fill_mesh = new TerrainMesh(json_obj, TerrainGeometryType.FILL);
-		this.edges_mesh = new TerrainMesh(json_obj, TerrainGeometryType.EDGES);
+	public constructor(parent_obj: TerrainContainer, json_obj) {
+		this.parent = parent_obj;
+		this.container = new PIXI.Container();
+		this.parent.container.addChild(this.container);
+		
+		this.fill_mesh = new TerrainMesh(this, json_obj, TerrainGeometryType.FILL);
+		this.edges_mesh = new TerrainMesh(this, json_obj, TerrainGeometryType.EDGES);
 	}
 };
 
@@ -73,12 +92,15 @@ var forest_edges: PIXI.Texture;
 class TerrainContainer {
 	
 	terrain_list: Terrain[] = [];
+	container: PIXI.Container;
 	
 	constructor(complete_json_data) {
+		this.container = new PIXI.Container();
+		
 		for (var i = 0; i < complete_json_data.length; ++i) {
 			var terrain_obj = complete_json_data[i];
 			console.log(terrain_obj);
-			var terrain = new Terrain(terrain_obj);
+			var terrain = new Terrain(this, terrain_obj);
 			this.terrain_list.push(terrain);
 		}
 	}
@@ -160,6 +182,7 @@ window.onload = function() {
 		
 		var terrain_arr = JSON.parse(resources.terrain.data).terrain;
 		var terrain_container = new TerrainContainer(terrain_arr);
+		stage.addChild(terrain_container.container);
 	});
 }
 
