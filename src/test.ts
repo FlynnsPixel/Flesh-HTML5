@@ -25,8 +25,11 @@ class TerrainMesh {
 	
 	constructor(json_obj, geometry_type: TerrainGeometryType) {
 		this.type = geometry_type;
-		var fill_indices = json_obj.fill_indices;
-		var edge_indices = json_obj.edge_indices;
+		var indices_arr;
+		if (this.type == TerrainGeometryType.FILL) indices_arr = json_obj.fill_indices;
+		else if (this.type == TerrainGeometryType.EDGES) indices_arr = json_obj.edge_indices;
+		var indices_start = indices_arr[0];
+		var indices_size = indices_arr[1];
 		
 		var vertices = new Float32Array(json_obj.vertex_data.length);
 		for (var n = 0; n < vertices.length; ++n) {
@@ -34,29 +37,15 @@ class TerrainMesh {
 			//flip all y vertices because of renderer coord system
 			if (n % 2 == 1) vertices[n] = -vertices[n];
 		}
-		var indices = new Uint16Array(fill_indices[1]);
-		var p = fill_indices[0];
-		for (var n: number = fill_indices[0]; n < fill_indices[1]; ++n) {
-			indices[p] = json_obj.indices[n];
-			++p;
+		var indices = new Uint16Array(indices_size);
+		for (var n: number = 0; n < indices_size; ++n) {
+			indices[n] = json_obj.indices[indices_start + n];
 		}
-		var indices_arr = [];
-		p = 0;
-		for (var n = 0; n < indices.length; ++n) {
-			indices_arr[p] = indices[n];
-			if (vertices[indices_arr[p] * 2] >= 10 && vertices[(indices_arr[p] * 2) + 1] >= -8 &&
-				vertices[indices_arr[p] * 2] <= 24 && vertices[(indices_arr[p] * 2) + 1] <= 8) {
-				p -= n % 3;
-				--p;
-				n += 2 - (n % 3);
-			}
-			++p;
-		}
-		indices = new Uint16Array(indices_arr);
 		
 		var uvs = new Float32Array(json_obj.uvs.length);
 		for (var n = 0; n < uvs.length; ++n) {
 			uvs[n] = json_obj.uvs[n];
+			//flip all y uvs because of renderer coord system
 			if (n % 2 == 1) uvs[n] = -uvs[n];
 		}
 		var mesh_fill = new PIXI.mesh.Mesh(forest_fill, vertices, uvs, indices, PIXI.mesh.Mesh.DRAW_MODES.TRIANGLES);
