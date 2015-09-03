@@ -41,7 +41,7 @@ class TerrainMesh {
 
 		var vertices = new Float32Array(json_obj.vertex_data.length);
 		for (var n = 0; n < vertices.length; ++n) {
-			vertices[n] = json_obj.vertex_data[n];
+		  vertices[n] = json_obj.vertex_data[n];
 			//flip all y vertices because of renderer coord system
 			if (n % 2 == 1) vertices[n] = -vertices[n];
 		}

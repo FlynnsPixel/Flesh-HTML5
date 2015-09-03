@@ -1,4 +1,3 @@
-/// <reference path="../pixi/pixi.js.d.ts" />
 var Square = (function () {
     function Square() {
     }
@@ -35,39 +34,26 @@ function spawn_square(amount) {
     }
 }
 window.onload = function () {
-    renderer = PIXI.autoDetectRenderer(400, 300, { antialias: true }, false);
-    renderer.backgroundColor = 0x99ff77;
-    document.body.appendChild(renderer.view);
-    if (renderer instanceof PIXI.CanvasRenderer) {
-        console.log("using canvas renderer");
-    }
-    else {
-        console.log("using webgl");
-    }
-    stage = new PIXI.Container();
-    container = new PIXI.ParticleContainer(100000, [false, true, false, false, false]);
-    stage.addChild(container);
-    PIXI.loader.add("bunny", "assets/bunny.png");
-    spawn_square(1);
-    resize_canvas();
-    game_loop();
-    document.ontouchstart = mouse_down;
-    document.ontouchend = mouse_up;
-    document.onmousedown = mouse_down;
-    document.onmouseup = mouse_up;
-    PIXI.loader.add("forest_fill", "assets/forest_fill.png");
-    PIXI.loader.add("forest_edges", "assets/forest_edges.png");
-    PIXI.loader.add("terrain", "assets/terrain.txt");
-    PIXI.loader.load(function (loader, resources) {
-        square_tex = resources.bunny.texture;
-        forest_fill = resources.forest_fill.texture;
-        forest_edges = resources.forest_edges.texture;
-        console.log(resources["bunny"]);
-        if (resources.terrain.error)
-            console.log("error occurred while loading resources: " + resources.terrain.error);
-        var terrain_arr = JSON.parse(resources.terrain.data).terrain;
-        var terrain_container = new TerrainContainer(terrain_arr);
-        stage.addChild(terrain_container.container);
+    init_assets(function () {
+        renderer = PIXI.autoDetectRenderer(400, 300, { antialias: true }, false);
+        renderer.backgroundColor = 0x99ff77;
+        document.body.appendChild(renderer.view);
+        resize_canvas();
+        if (renderer instanceof PIXI.CanvasRenderer) {
+            console.log("using canvas renderer");
+        }
+        else {
+            console.log("using webgl");
+        }
+        stage = new PIXI.Container();
+        container = new PIXI.ParticleContainer(100000, [false, true, false, false, false]);
+        stage.addChild(container);
+        spawn_square(1);
+        game_loop();
+        document.ontouchstart = mouse_down;
+        document.ontouchend = mouse_up;
+        document.onmousedown = mouse_down;
+        document.onmouseup = mouse_up;
     });
 };
 function mouse_down() {

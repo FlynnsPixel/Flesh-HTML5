@@ -21,6 +21,7 @@
         "!./node_modules/**/*"
     ],
     "files": [
+        "./assets.ts",
         "./root.ts",
         "./terrain.ts"
     ]
