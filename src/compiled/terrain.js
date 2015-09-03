@@ -13,11 +13,11 @@ var TerrainMesh = (function () {
         switch (this.type) {
             case TerrainGeometryType.FILL:
                 indices_arr = json_obj.fill_indices;
-                this.tex = forest_fill;
+                this.tex = texture_forest_fill;
                 break;
             case TerrainGeometryType.EDGES:
                 indices_arr = json_obj.edge_indices;
-                this.tex = forest_edges;
+                this.tex = texture_forest_edges;
                 break;
         }
         var indices_start = indices_arr[0];
@@ -70,7 +70,6 @@ var TerrainContainer = (function () {
         this.container = new PIXI.Container();
         for (var i = 0; i < complete_json_data.length; ++i) {
             var terrain_obj = complete_json_data[i];
-            console.log(terrain_obj);
             var terrain = new Terrain(this, terrain_obj);
             this.terrain_list.push(terrain);
         }

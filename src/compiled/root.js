@@ -8,7 +8,6 @@ var stage;
 var renderer;
 var padding = 15;
 var squares = [];
-var square_tex;
 var container;
 var is_adding;
 window.onresize = function () {
@@ -25,7 +24,7 @@ function resize_canvas() {
 function spawn_square(amount) {
     for (var n = 0; n < amount; ++n) {
         var square = new Square();
-        square.base = new PIXI.Sprite(square_tex);
+        square.base = new PIXI.Sprite(texture_bunny);
         square.base.x = Math.random() * renderer.width;
         square.base.y = Math.random() * renderer.height;
         square.angle = Math.random() * Math.PI * 2.0;
@@ -49,9 +48,8 @@ window.onload = function () {
     stage.addChild(container);
     console.log("initialising assets...");
     init_assets(function () {
-        console.log(raw_terrain);
         console.log("assets initialised");
-        var terrain_arr = JSON.parse(raw_terrain.data).terrain;
+        var terrain_arr = JSON.parse(raw_terrain).terrain;
         var terrain_container = new TerrainContainer(terrain_arr);
         stage.addChild(terrain_container.container);
         spawn_square(1);

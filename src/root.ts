@@ -9,7 +9,6 @@ var stage: PIXI.Container;
 var renderer: PIXI.CanvasRenderer | PIXI.WebGLRenderer;
 const padding = 15;
 var squares: Square[] = [];
-var square_tex: PIXI.Texture;
 var container: PIXI.ParticleContainer;
 var is_adding: boolean;
 
@@ -28,7 +27,7 @@ function resize_canvas() {
 function spawn_square(amount: number) {
 	for (var n = 0; n < amount; ++n) {
 		var square = new Square();
-		square.base = new PIXI.Sprite(square_tex);
+		square.base = new PIXI.Sprite(texture_bunny);
 
 		square.base.x = Math.random() * renderer.width;
 		square.base.y = Math.random() * renderer.height;
@@ -61,11 +60,9 @@ window.onload = function() {
 
 	console.log("initialising assets...");
 	init_assets(function() {
-		console.log(raw_terrain);
-
 		console.log("assets initialised");
 
-		var terrain_arr = JSON.parse(raw_terrain.data).terrain;
+		var terrain_arr = JSON.parse(raw_terrain).terrain;
 		var terrain_container = new TerrainContainer(terrain_arr);
 		stage.addChild(terrain_container.container);
 
