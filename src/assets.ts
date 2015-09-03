@@ -34,7 +34,7 @@ function load_tex(url: string, callback: any) {
 	});
 }
 
-function load_raw(url: string, callback: any):Object {
+function load_raw(url: string, callback: any) {
 	PIXI.loader.add(url, url, undefined, function() {
 		var obj = PIXI.loader.resources[url];
 		if (obj.error) {

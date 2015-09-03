@@ -28,20 +28,14 @@ function spawn_square(amount) {
         square.base.x = Math.random() * renderer.width;
         square.base.y = Math.random() * renderer.height;
         square.angle = Math.random() * Math.PI * 2.0;
-        stage.addChild(square.base);
+        container.addChild(square.base);
         squares.push(square);
     }
 }
 window.onload = function () {
-    renderer = PIXI.autoDetectRenderer(400, 300, { antialias: true }, false);
+    renderer = new PIXI.WebGLRenderer(400, 300, { antialias: false });
     renderer.backgroundColor = 0x99ff77;
     document.body.appendChild(renderer.view);
-    if (renderer instanceof PIXI.CanvasRenderer) {
-        console.log("using canvas renderer");
-    }
-    else {
-        console.log("using webgl");
-    }
     stage = new PIXI.Container();
     resize_canvas();
     container = new PIXI.ParticleContainer(100000, [false, true, false, false, false]);
@@ -51,7 +45,11 @@ window.onload = function () {
         console.log("assets initialised");
         var terrain_arr = JSON.parse(raw_terrain).terrain;
         var terrain_container = new TerrainContainer(terrain_arr);
-        stage.addChild(terrain_container.container);
+        var render_tex;
+        render_tex = new PIXI.RenderTexture(renderer, renderer.width - 40, renderer.height - 40);
+        render_tex.render(terrain_container.container, null, true);
+        var s = new PIXI.Sprite(render_tex);
+        stage.addChild(s);
         spawn_square(1);
         game_loop();
         document.ontouchstart = mouse_down;
@@ -67,6 +65,7 @@ function mouse_up() {
     is_adding = false;
 }
 setInterval(function () {
+    console.log("fps: " + fps.getFPS() + ", squares: " + squares.length);
 }, 1000);
 var fps = {
     startTime: 0,
