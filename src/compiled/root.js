@@ -1,3 +1,5 @@
+/// <reference path="../lib-ts/pixi.js.d.ts" />
+/// <reference path="../lib-ts/box2d.ts.d.ts"/>
 var Square = (function () {
     function Square() {
     }
@@ -13,6 +15,9 @@ var is_adding;
 var dest_scale = 1;
 var game_layer;
 var ui_layer;
+var world;
+var bunny;
+var ground_body;
 window.onresize = function () {
     resize_canvas();
 };
@@ -53,18 +58,49 @@ window.onload = function () {
         var terrain_arr = JSON.parse(raw_terrain).terrain;
         var terrain_container = new TerrainContainer(terrain_arr);
         game_layer.addChild(terrain_container.container);
-        console.log(terrain_container.container.getBounds());
         game_layer.x = renderer.width / 2.0;
         game_layer.y = renderer.height / 2.0;
         game_layer.pivot.x = game_layer.width / 2.0;
         game_layer.pivot.y = game_layer.height / 2.0;
-        spawn_square(1);
-        game_loop();
         document.ontouchstart = mouse_down;
         document.ontouchend = mouse_up;
         document.onmousedown = mouse_down;
         document.onmouseup = mouse_up;
         document.onkeydown = key_down;
+        bunny = new PIXI.Sprite(texture_bunny);
+        stage.addChild(bunny);
+        world = new box2d.b2World(new box2d.b2Vec2(0.0, 960.0));
+        var body_def = new box2d.b2BodyDef();
+        body_def.position.SetXY(0.0, 400.0);
+        var body = world.CreateBody(body_def);
+        var box_shape = new box2d.b2PolygonShape();
+        box_shape.SetAsBox(50.0, 10.0);
+        var fixture = new box2d.b2FixtureDef();
+        fixture.shape = box_shape;
+        body.CreateFixture(fixture);
+        var ground_body_def = new box2d.b2BodyDef();
+        ground_body_def.type = box2d.b2BodyType.b2_dynamicBody;
+        ground_body_def.position.SetXY(0, 4);
+        ground_body = world.CreateBody(ground_body_def);
+        var ground_box_shape = new box2d.b2PolygonShape();
+        ground_box_shape.SetAsBox(1, 1);
+        var ground_fixture = new box2d.b2FixtureDef();
+        ground_fixture.shape = ground_box_shape;
+        ground_body.m_mass = 1000;
+        ground_body.CreateFixture(ground_fixture);
+        spawn_square(1);
+        game_loop();
+        var graphics = new PIXI.Graphics();
+        graphics.beginFill(0xff0000);
+        var arr = [];
+        for (var n = 0; n < box_shape.m_vertices.length; ++n) {
+            arr[n] = new PIXI.Point();
+            arr[n].x = box_shape.m_vertices[n].x;
+            arr[n].y = box_shape.m_vertices[n].y;
+        }
+        graphics.drawPolygon(arr);
+        graphics.endFill();
+        stage.addChild(graphics);
     });
 };
 function key_down(e) {
@@ -101,6 +137,14 @@ var fps = {
     }
 };
 function game_loop() {
+    var time_step = 1.0 / 60.0;
+    var vel_iterations = 6;
+    var pos_iterations = 2;
+    world.Step(time_step, vel_iterations, pos_iterations);
+    var pos = ground_body.GetPosition();
+    var angle = ground_body.GetAngleRadians();
+    bunny.position.x = pos.x;
+    bunny.position.y = pos.y;
     game_layer.scale.x -= (game_layer.scale.x - dest_scale) / 4.0;
     game_layer.scale.y -= (game_layer.scale.y - dest_scale) / 4.0;
     setTimeout(game_loop, 1000.0 / 60.0);
