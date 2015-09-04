@@ -63,7 +63,7 @@ var Terrain = (function () {
     function Terrain(parent_obj, json_obj) {
         this.min = new PIXI.Point(10000, 10000);
         this.max = new PIXI.Point(-10000, -10000);
-        this.scale = 15.0;
+        this.scale = 20.0;
         this.parent = parent_obj;
         this.container = new PIXI.Container();
         this.parent.container.addChild(this.container);

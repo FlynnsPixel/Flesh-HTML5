@@ -11,7 +11,9 @@ const padding = 15;
 var squares: Square[] = [];
 var container: PIXI.ParticleContainer;
 var is_adding: boolean;
-var render_sprite;
+var dest_scale: number = 1;
+var game_layer: PIXI.Container;
+var ui_layer: PIXI.Container;
 
 window.onresize = function() {
 	resize_canvas();
@@ -47,11 +49,15 @@ window.onload = function() {
 	document.body.appendChild(renderer.view);
 
 	stage = new PIXI.Container();
+	game_layer = new PIXI.Container();
+	ui_layer = new PIXI.Container();
+	stage.addChild(game_layer);
+	stage.addChild(ui_layer);
 
 	resize_canvas();
 
 	container = new PIXI.ParticleContainer(100000, [false, true, false, false, false]);
-	stage.addChild(container);
+	game_layer.addChild(container);
 
 	console.log("initialising assets...");
 	init_assets(function() {
@@ -59,22 +65,11 @@ window.onload = function() {
 
 		var terrain_arr = JSON.parse(raw_terrain).terrain;
 		var terrain_container = new TerrainContainer(terrain_arr);
-
-		var render_tex: PIXI.RenderTexture;
-		render_tex = new PIXI.RenderTexture(renderer, terrain_container.width, terrain_container.height);
-		var c = new PIXI.Container();
-		var bg = new PIXI.Sprite(texture_forest_fill);
-		bg.scale.x = 80;
-		bg.scale.y = 80;
-		c.addChild(bg);
-		c.addChild(terrain_container.container);
-		render_tex.render(c, null, true);
-		render_sprite = new PIXI.Sprite(render_tex);
-		stage.addChild(render_sprite);
-		render_sprite.pivot.x = terrain_container.width / 2.0;
-		render_sprite.pivot.y = terrain_container.height / 2.0;
-		render_sprite.position.x = renderer.width / 2.0;
-		render_sprite.position.y = renderer.height / 2.0;
+		game_layer.addChild(terrain_container.container);
+		game_layer.x = renderer.width / 2.0;
+		game_layer.y = renderer.height / 2.0;
+		game_layer.pivot.x = terrain_container.width / 2.0;
+		game_layer.pivot.y = terrain_container.height / 2.0;
 
 		spawn_square(1);
 		game_loop();
@@ -83,7 +78,21 @@ window.onload = function() {
 		document.ontouchend = mouse_up;
 		document.onmousedown = mouse_down;
 		document.onmouseup = mouse_up;
+
+		document.onkeydown = key_down;
 	});
+}
+
+function key_down(e) {
+	e = e || window.event;
+
+	if (e.keyCode == 187) {
+		dest_scale += .1;
+	}else if (e.keyCode == 189) {
+		dest_scale -= .1;
+	}
+	dest_scale = (dest_scale < .5 ) ? .5 : dest_scale;
+	dest_scale = (dest_scale > 2) ? 2 : dest_scale;
 }
 
 function mouse_down() {
@@ -117,13 +126,14 @@ var fps = {
 };
 
 function game_loop() {
+	game_layer.scale.x -= (game_layer.scale.x - dest_scale) / 4.0;
+	game_layer.scale.y -= (game_layer.scale.y - dest_scale) / 4.0;
+
 	setTimeout(game_loop, 1000.0 / 60.0);
 
 	fps.getFPS();
 	if (is_adding) {
-		//spawn_square(100);
-		render_sprite.scale.x -= .01;
-		render_sprite.scale.y -= .01;
+		spawn_square(100);
 	}
 
 	for (var n = 0; n < squares.length; ++n) {

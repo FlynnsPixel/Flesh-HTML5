@@ -87,7 +87,7 @@ class Terrain {
 	parent: TerrainContainer;
 	min: PIXI.Point = new PIXI.Point(10000, 10000);
 	max: PIXI.Point = new PIXI.Point(-10000, -10000);
-	scale: number = 15.0;
+	scale: number = 20.0;
 	
 	public constructor(parent_obj: TerrainContainer, json_obj) {
 
