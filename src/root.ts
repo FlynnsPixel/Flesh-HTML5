@@ -66,10 +66,11 @@ window.onload = function() {
 		var terrain_arr = JSON.parse(raw_terrain).terrain;
 		var terrain_container = new TerrainContainer(terrain_arr);
 		game_layer.addChild(terrain_container.container);
+		console.log(terrain_container.container.getBounds());
 		game_layer.x = renderer.width / 2.0;
 		game_layer.y = renderer.height / 2.0;
-		game_layer.pivot.x = terrain_container.width / 2.0;
-		game_layer.pivot.y = terrain_container.height / 2.0;
+		game_layer.pivot.x = game_layer.width / 2.0;
+		game_layer.pivot.y = game_layer.height / 2.0;
 
 		spawn_square(1);
 		game_loop();

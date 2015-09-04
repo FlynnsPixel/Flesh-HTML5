@@ -41,17 +41,9 @@ class TerrainMesh {
 
 		var vertices = new Float32Array(json_obj.vertex_data.length);
 		for (var n = 0; n < vertices.length; ++n) {
-			var v = vertices[n];
-		  v = json_obj.vertex_data[n];
+		  vertices[n] = json_obj.vertex_data[n];
 			//flip all y vertices because of renderer coord system
-			if (n % 2 == 1) {
-				v = -v;
-				this.parent.min.y = (v < this.parent.min.y) ? v : this.parent.min.y;
-				this.parent.max.y = (v > this.parent.max.y) ? v : this.parent.max.y;
-			}
-			this.parent.min.x = (v < this.parent.min.x) ? v : this.parent.min.x;
-			this.parent.max.x = (v > this.parent.max.x) ? v : this.parent.max.x;
-			vertices[n] = v;
+			if (n % 2 == 1) vertices[n] = -vertices[n];
 		}
 		var indices = new Uint16Array(indices_size);
 		for (var n: number = 0; n < indices_size; ++n) {
@@ -65,12 +57,9 @@ class TerrainMesh {
 			if (n % 2 == 1) uvs[n] = -uvs[n];
 		}
 		this.mesh = new PIXI.mesh.Mesh(this.tex, vertices, uvs, indices, PIXI.mesh.Mesh.DRAW_MODES.TRIANGLES);
-		this.mesh.scale.set(this.parent.scale, this.parent.scale);
-		this.mesh.x = json_obj.pos[0] * this.parent.scale;
-		this.mesh.y = -json_obj.pos[1] * this.parent.scale;
+		this.mesh.x = json_obj.pos[0];
+		this.mesh.y = -json_obj.pos[1];
 		this.parent.container.addChild(this.mesh);
-
-		console.log(this.parent.min.x + ", " + this.parent.min.y + " | " + this.parent.max.x + ", " + this.parent.max.y);
 	}
 
 	get_tex(): PIXI.Texture { return this.tex; }
@@ -85,25 +74,23 @@ class Terrain {
 	edges_mesh: TerrainMesh;
 	container: PIXI.Container;
 	parent: TerrainContainer;
-	min: PIXI.Point = new PIXI.Point(10000, 10000);
-	max: PIXI.Point = new PIXI.Point(-10000, -10000);
-	scale: number = 20.0;
-	
-	public constructor(parent_obj: TerrainContainer, json_obj) {
 
+	public constructor(parent_obj: TerrainContainer, json_obj) {
 		this.parent = parent_obj;
 		this.container = new PIXI.Container();
-		this.parent.container.addChild(this.container);
 
 		this.fill_mesh = new TerrainMesh(this, json_obj, TerrainGeometryType.FILL);
 		this.edges_mesh = new TerrainMesh(this, json_obj, TerrainGeometryType.EDGES);
-
-		this.min.x *= this.scale;
-		this.min.y *= this.scale;
-		this.max.x *= this.scale;
-		this.max.y *= this.scale;
 	}
 };
+
+function calculate_min_max_rect(b1: PIXI.Rectangle, b2: PIXI.Rectangle): PIXI.Rectangle {
+	b1.x = (b2.x < b1.x) ? b2.x : b1.x;
+	b1.y = (b2.y < b1.y) ? b2.y : b1.y;
+	b1.width = (b2.width > b1.width) ? b2.width : b1.width;
+	b1.height = (b2.height > b1.height) ? b2.height : b1.height;
+	return b1;
+}
 
 var forest_fill: PIXI.Texture;
 var forest_edges: PIXI.Texture;
@@ -112,10 +99,7 @@ class TerrainContainer {
 
 	terrain_list: Terrain[] = [];
 	container: PIXI.Container;
-	min: PIXI.Point = new PIXI.Point(10000, 10000);
-	max: PIXI.Point = new PIXI.Point(-10000, -10000);
-	width: number;
-	height: number;
+	private scale: number = 20.0;
 
 	constructor(complete_json_data) {
 		this.container = new PIXI.Container();
@@ -123,19 +107,13 @@ class TerrainContainer {
 		for (var i = 0; i < complete_json_data.length; ++i) {
 			var terrain_obj = complete_json_data[i];
 			var terrain = new Terrain(this, terrain_obj);
+			this.container.addChild(terrain.container);
 			this.terrain_list.push(terrain);
-
-			this.min.x = (terrain.min.x < this.min.x) ? terrain.min.x : this.min.x;
-			this.min.y = (terrain.min.y < this.min.y) ? terrain.min.y : this.min.y;
-			this.max.x = (terrain.max.x > this.max.x) ? terrain.max.x : this.max.x;
-			this.max.y = (terrain.max.y > this.max.y) ? terrain.max.y : this.max.y;
-		}
-		this.width = this.max.x - this.min.x;
-		this.height = this.max.y - this.min.y;
-
-		console.log(this.width + ",  " + this.height);
-
-		//this.container.x -= this.max.x + 40;
-		//this.container.y += this.max.y + 340;
 	}
+
+	this.container.scale.x *= this.scale;
+	this.container.scale.y *= this.scale;
+	var bounds = this.container.getBounds();
+	bounds.x *= this.scale; bounds.y *= this.scale;
+	bounds.width *= this.scale; bounds.height *= this.scale;
 };
