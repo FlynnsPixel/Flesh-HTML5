@@ -11,9 +11,9 @@ class TerrainMesh {
 	type: TerrainGeometryType;
 	parent: Terrain;
 
-	dynamic_vertices: number[];
-	dynamic_indices: number[];
-	dynamic_uvs: number[];
+	dynamic_vertices: number[] = [];
+	dynamic_indices: number[] = [];
+	dynamic_uvs: number[] = [];
 
 	private static_vertices: Float32Array[];
 	private static_indices: Uint16Array[];
@@ -39,26 +39,33 @@ class TerrainMesh {
 		var indices_start = indices_arr[0];
 		var indices_size = indices_arr[1];
 
-		var vertices = new Float32Array(json_obj.vertex_data.length);
+		this.static_vertices = new Float32Array(json_obj.vertex_data.length);
+		var vertices = this.static_vertices;
 		for (var n = 0; n < vertices.length; ++n) {
 		  vertices[n] = json_obj.vertex_data[n];
 			//flip all y vertices because of renderer coord system
-			if (n % 2 == 1) vertices[n] = -vertices[n];
-		}
-		var indices = new Uint16Array(indices_size);
-		for (var n: number = 0; n < indices_size; ++n) {
-			indices[n] = json_obj.indices[indices_start + n];
+			if (n % 2 == 1) vertices[n] = -vertices[n] - json_obj.pos[1];
+			else vertices[n] = vertices[n] + json_obj.pos[0];
+			this.dynamic_vertices[n] = vertices[n];
 		}
 
-		var uvs = new Float32Array(json_obj.uvs.length);
+		this.static_indices = new Uint16Array(indices_size);
+		var indices = this.static_indices;
+		for (var n: number = 0; n < indices_size; ++n) {
+			indices[n] = json_obj.indices[indices_start + n];
+			this.dynamic_indices[n] = indices[n];
+		}
+
+		this.static_uvs = new Float32Array(json_obj.uvs.length);
+		var uvs = this.static_uvs;
 		for (var n = 0; n < uvs.length; ++n) {
 			uvs[n] = json_obj.uvs[n];
 			//flip all y uvs because of renderer coord system
 			if (n % 2 == 1) uvs[n] = -uvs[n];
+			this.dynamic_uvs[n] = uvs[n];
 		}
+
 		this.mesh = new PIXI.mesh.Mesh(this.tex, vertices, uvs, indices, PIXI.mesh.Mesh.DRAW_MODES.TRIANGLES);
-		this.mesh.x = json_obj.pos[0];
-		this.mesh.y = -json_obj.pos[1];
 		this.parent.container.addChild(this.mesh);
 	}
 
