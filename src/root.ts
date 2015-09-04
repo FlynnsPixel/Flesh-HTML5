@@ -91,15 +91,16 @@ window.onload = function() {
 		bunny = new PIXI.Sprite(texture_bunny);
 		ui_layer.addChild(bunny);
 
-		world = new box2d.b2World(new box2d.b2Vec2(0.0, 960.0));
+		world = new box2d.b2World(new box2d.b2Vec2(0, 0));
 
 		var body_def = new box2d.b2BodyDef();
-		body_def.position.SetXY(0.0, 400.0);
+		body_def.position.SetXY(0.0, 200.0);
 
 		var body = world.CreateBody(body_def);
+		body.SetAngleRadians(45);
 
 		var box_shape = new box2d.b2PolygonShape();
-		box_shape.SetAsBox(50.0, 10.0);
+		box_shape.SetAsBox(100.0, 40.0);
 
 		var fixture = new box2d.b2FixtureDef();
 		fixture.shape = box_shape;
@@ -109,21 +110,22 @@ window.onload = function() {
 
 		var ground_body_def = new box2d.b2BodyDef();
 		ground_body_def.type = box2d.b2BodyType.b2_dynamicBody;
-		ground_body_def.position.SetXY(0, 4);
 
 		ground_body = world.CreateBody(ground_body_def);
 
 		ground_box_shape = new box2d.b2PolygonShape();
-		ground_box_shape.SetAsBox(32, 64);
+		ground_box_shape.SetAsBox(32, 32);
 
 		var ground_fixture = new box2d.b2FixtureDef();
 		ground_fixture.shape = ground_box_shape;
-		ground_body.m_mass = 1000;
+		ground_fixture.density = 1.0;
 
 		ground_body.CreateFixture(ground_fixture);
+		ground_body.m_mass = 1;
+		//console.log(ground_body.);
 
 		graphics = new PIXI.Graphics();
-		game_layer.addChild(graphics);
+		ui_layer.addChild(graphics);
 
 		spawn_square(1);
 		game_loop();
@@ -176,6 +178,8 @@ function game_loop() {
 	setTimeout(game_loop, 1000.0 / 60.0);
 
 	var time_step = 1.0 / 60.0;
+	//only for collision, the higher the value, the better collision
+	//accuracy at the cost of performance
 	var vel_iterations = 6;
 	var pos_iterations = 2;
 
@@ -184,13 +188,35 @@ function game_loop() {
 	var pos = ground_body.GetPosition();
 	var angle = ground_body.GetAngleRadians();
 
-	bunny.position.x = pos.x;
-	bunny.position.y = pos.y;
+	bunny.x = pos.x + 200;
+	bunny.y = pos.y + 200;
 
 	graphics.clear();
-	graphics.beginFill(0xff0000);
-	graphics.lineStyle(1, 0x000000, 1);
-	var mesh = terrain_container.terrain_list[0].fill_mesh;
+	graphics.beginFill(0x00ff00);
+	graphics.fillAlpha = .4;
+	graphics.lineStyle(1, 0x000000, .4);
+
+	var x = pos.x + 200;
+	var y = pos.y + 200;
+	var w = 32;
+	var h = 32;
+	ground_body.SetAngleRadians(angle + 2);
+	var a = angle / (180 / Math.PI);
+	var origin_x = w / 2.0;
+	var origin_y = h / 2.0;
+	var c = Math.cos(a);
+	var s = Math.sin(a);
+	x += origin_x;
+	y += origin_y;
+	w -= origin_x;
+	h -= origin_y;
+	origin_x = -origin_x;
+	origin_y = -origin_y;
+	graphics.moveTo(x + ((c * origin_x) - (s * origin_y)), y + ((s * origin_x) + (c * origin_y)));
+	graphics.lineTo(x + ((c * w) - (s * origin_y)), y + ((s * w) + (c * origin_y)));
+	graphics.lineTo(x + ((c * w) - (s * h)), y + ((s * w) + (c * h)));
+	graphics.lineTo(x + ((c * origin_x) - (s * h)), y + ((s * origin_x) + (c * h)));
+	var mesh = terrain_container.terrain_list[1].fill_mesh;
 	var vertices = mesh.get_static_vertices();
 	var indices = mesh.get_static_indices();
 	var s = 20.0;
