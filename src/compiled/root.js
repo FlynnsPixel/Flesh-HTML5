@@ -1,5 +1,13 @@
 /// <reference path="../lib-ts/pixi.js.d.ts" />
-/// <reference path="../lib-ts/box2d.ts.d.ts"/>
+/// <reference path="../lib-ts/box2d.web.d.ts"/>
+var b2Common = Box2D.Common;
+var b2Math = Box2D.Common.Math;
+var b2Collision = Box2D.Collision;
+var b2Shapes = Box2D.Collision.Shapes;
+var b2Dynamics = Box2D.Dynamics;
+var b2Contacts = Box2D.Dynamics.Contacts;
+var b2Controllers = Box2D.Dynamics.Controllers;
+var b2Joints = Box2D.Dynamics.Joints;
 var Square = (function () {
     function Square() {
     }
@@ -18,9 +26,13 @@ var ui_layer;
 var terrain_container;
 var world;
 var bunny;
+var body;
 var ground_body;
+var ground_body2;
 var ground_box_shape;
 var graphics;
+var B2_METERS = .01;
+var keys_down = [];
 window.onresize = function () {
     resize_canvas();
 };
@@ -69,40 +81,51 @@ window.onload = function () {
         document.ontouchend = mouse_up;
         document.onmousedown = mouse_down;
         document.onmouseup = mouse_up;
-        document.onkeydown = key_down;
+        document.onkeydown = on_key_down;
+        document.onkeyup = on_key_up;
         bunny = new PIXI.Sprite(texture_bunny);
         ui_layer.addChild(bunny);
-        world = new box2d.b2World(new box2d.b2Vec2(0.0, 9.8));
-        var body_def = new box2d.b2BodyDef();
-        body_def.position.SetXY(0.0, 200.0);
-        var body = world.CreateBody(body_def);
-        body.SetAngleRadians(45 / (180 / Math.PI));
-        var box_shape = new box2d.b2PolygonShape();
-        box_shape.SetAsBox(100.0, 40.0);
-        var fixture = new box2d.b2FixtureDef();
+        world = new b2Dynamics.b2World(new b2Math.b2Vec2(0.0, 9.8), true);
+        var body_def = new b2Dynamics.b2BodyDef();
+        body_def.position.Set(0, 250.0 * B2_METERS);
+        body = world.CreateBody(body_def);
+        body.SetAngle(0 / (180 / Math.PI));
+        var box_shape = new b2Shapes.b2PolygonShape();
+        box_shape.SetAsBox((renderer.width / 2.0) * B2_METERS, 40 * B2_METERS);
+        var fixture = new b2Dynamics.b2FixtureDef();
         fixture.shape = box_shape;
         body.CreateFixture(fixture);
-        var ground_body_def = new box2d.b2BodyDef();
-        ground_body_def.type = box2d.b2BodyType.b2_dynamicBody;
+        var ground_body_def = new b2Dynamics.b2BodyDef();
+        ground_body_def.type = 2;
+        ground_body_def.position.Set(400.0 * B2_METERS, 0);
         ground_body = world.CreateBody(ground_body_def);
-        ground_box_shape = new box2d.b2PolygonShape();
-        ground_box_shape.SetAsBox(32, 32);
-        var ground_fixture = new box2d.b2FixtureDef();
+        ground_box_shape = new b2Shapes.b2PolygonShape();
+        ground_box_shape.SetAsBox(bunny.width * B2_METERS, bunny.height * B2_METERS);
+        var ground_fixture = new b2Dynamics.b2FixtureDef();
         ground_fixture.shape = ground_box_shape;
         ground_fixture.density = .5;
         ground_fixture.friction = .5;
-        ground_fixture.restitution = .8;
+        ground_fixture.restitution = .4;
         ground_body.CreateFixture(ground_fixture);
-        ground_body.m_mass = 0;
-        ground_body.SetFixedRotation(true);
-        console.log(ground_body_def);
+        var ground_body_def2 = new b2Dynamics.b2BodyDef();
+        ground_body_def2.type = 2;
+        ground_body_def2.position.Set(100.0 * B2_METERS, 0);
+        ground_body2 = world.CreateBody(ground_body_def2);
+        var ground_box_shape2 = new b2Shapes.b2PolygonShape();
+        ground_box_shape2.SetAsBox(bunny.width * B2_METERS, bunny.height * B2_METERS);
+        var ground_fixture2 = new b2Dynamics.b2FixtureDef();
+        ground_fixture2.shape = ground_box_shape2;
+        ground_fixture2.density = .5;
+        ground_fixture2.friction = .5;
+        ground_fixture2.restitution = .4;
+        ground_body2.CreateFixture(ground_fixture2);
         graphics = new PIXI.Graphics();
         ui_layer.addChild(graphics);
         spawn_square(1);
         game_loop();
     });
 };
-function key_down(e) {
+function on_key_down(e) {
     e = e || window.event;
     if (e.keyCode == 187) {
         dest_scale += .1;
@@ -112,6 +135,10 @@ function key_down(e) {
     }
     dest_scale = (dest_scale < .5) ? .5 : dest_scale;
     dest_scale = (dest_scale > 2) ? 2 : dest_scale;
+    keys_down[e.keyCode] = true;
+}
+function on_key_up(e) {
+    keys_down[e.keyCode] = false;
 }
 function mouse_down() {
     is_adding = true;
@@ -125,35 +152,27 @@ var ms_accum = 0;
 var frame_count = 0;
 var dt = 0;
 var time_step = 1.0 / 60.0;
+var time_since_startup = 0;
 setInterval(function () {
     console.log("fps: " + Math.round(fps_accum / frame_count) + ", ms: " + Math.round(ms_accum / frame_count) + ", squares: " + squares.length);
     fps_accum = 0;
     ms_accum = 0;
     frame_count = 0;
 }, 1000);
-function game_loop() {
-    var start_time = new Date().getTime();
-    var vel_iterations = 6;
-    var pos_iterations = 2;
-    world.Step(time_step, vel_iterations, pos_iterations);
-    var pos = ground_body.GetPosition();
-    var angle = ground_body.GetAngleRadians();
-    bunny.x = pos.x;
-    bunny.y = pos.y;
-    graphics.clear();
+function physics_debug_draw(body, w, h) {
+    var pos = body.GetPosition();
+    var angle = body.GetAngle();
     graphics.beginFill(0x00ff00);
     graphics.fillAlpha = .4;
     graphics.lineStyle(1, 0x000000, .4);
-    var x = pos.x;
-    var y = pos.y;
-    var w = 32;
-    var h = 32;
     var origin_x = w / 2.0;
     var origin_y = h / 2.0;
+    origin_x = 0;
+    origin_y = 0;
     var c = Math.cos(angle);
     var s = Math.sin(angle);
-    x += origin_x;
-    y += origin_y;
+    var x = (pos.x / B2_METERS) + origin_x;
+    var y = (pos.y / B2_METERS) + origin_y;
     w -= origin_x;
     h -= origin_y;
     origin_x = -origin_x;
@@ -162,6 +181,33 @@ function game_loop() {
     graphics.lineTo(x + ((c * w) - (s * origin_y)), y + ((s * w) + (c * origin_y)));
     graphics.lineTo(x + ((c * w) - (s * h)), y + ((s * w) + (c * h)));
     graphics.lineTo(x + ((c * origin_x) - (s * h)), y + ((s * origin_x) + (c * h)));
+}
+function game_loop() {
+    var start_time = new Date().getTime();
+    var vel_iterations = 6;
+    var pos_iterations = 2;
+    world.Step(time_step, vel_iterations, pos_iterations);
+    var v = ground_body.GetLinearVelocity();
+    if (keys_down[37]) {
+        v.x -= .4;
+    }
+    else if (keys_down[39]) {
+        v.x += .4;
+    }
+    if (keys_down[38]) {
+        v.y -= .4;
+    }
+    else if (keys_down[40]) {
+        v.y += .4;
+    }
+    v.x = Math.max(v.x, -10) * .98;
+    v.x = Math.min(v.x, 10) * .98;
+    v.y = Math.max(v.y, -10) * .98;
+    v.y = Math.min(v.y, 10) * .98;
+    graphics.clear();
+    physics_debug_draw(ground_body, bunny.width, bunny.height);
+    physics_debug_draw(ground_body2, bunny.width, bunny.height);
+    physics_debug_draw(body, renderer.width / 2.0, 40);
     var mesh = terrain_container.terrain_list[1].fill_mesh;
     var vertices = mesh.get_static_vertices();
     var indices = mesh.get_static_indices();
@@ -205,6 +251,7 @@ function game_loop() {
     fps_accum += fps;
     ms_accum += dt;
     ++frame_count;
+    time_since_startup += dt;
     if (dt >= time_step * 1000.0) {
         setTimeout(game_loop, 0);
     }
