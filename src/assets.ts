@@ -12,7 +12,7 @@ var init_assets_failed = false;
 var arr;
 
 function init_assets(callback) {
-	load_tex("assets/bunny.png", 										function(tex) { texture_bunny = tex; });
+	load_tex("assets/bunny2.png", 										function(tex) { texture_bunny = tex; });
 	load_tex("assets/forest_fill.png", 							function(tex) { texture_forest_fill = tex; });
 	load_tex("assets/forest_edges.png", 						function(tex) { texture_forest_edges = tex; });
 

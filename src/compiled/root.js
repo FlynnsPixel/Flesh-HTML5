@@ -1,5 +1,5 @@
 /// <reference path="../lib-ts/pixi.js.d.ts" />
-/// <reference path="../lib-ts/box2d.web.d.ts"/>
+/// <reference path="../lib-ts/box2d-web.d.ts"/>
 var b2Common = Box2D.Common;
 var b2Math = Box2D.Common.Math;
 var b2Collision = Box2D.Collision;
@@ -85,13 +85,14 @@ window.onload = function () {
         document.onkeyup = on_key_up;
         bunny = new PIXI.Sprite(texture_bunny);
         ui_layer.addChild(bunny);
-        world = new b2Dynamics.b2World(new b2Math.b2Vec2(0.0, 9.8), true);
+        world = new b2Dynamics.b2World(new b2Math.b2Vec2(0.0, 9.8), false);
         var body_def = new b2Dynamics.b2BodyDef();
+        body_def.type = 0;
         body_def.position.Set(0, 250.0 * B2_METERS);
         body = world.CreateBody(body_def);
-        body.SetAngle(0 / (180 / Math.PI));
+        body.SetAngle(15 / (180 / Math.PI));
         var box_shape = new b2Shapes.b2PolygonShape();
-        box_shape.SetAsBox((renderer.width / 2.0) * B2_METERS, 40 * B2_METERS);
+        box_shape.SetAsOrientedBox((renderer.width / 2.0) * B2_METERS / 2.0, 40 * B2_METERS / 2.0, new b2Math.b2Vec2((renderer.width / 2.0) * B2_METERS / 2.0, 40 * B2_METERS / 2.0), 0);
         var fixture = new b2Dynamics.b2FixtureDef();
         fixture.shape = box_shape;
         body.CreateFixture(fixture);
@@ -100,7 +101,7 @@ window.onload = function () {
         ground_body_def.position.Set(400.0 * B2_METERS, 0);
         ground_body = world.CreateBody(ground_body_def);
         ground_box_shape = new b2Shapes.b2PolygonShape();
-        ground_box_shape.SetAsBox(bunny.width * B2_METERS, bunny.height * B2_METERS);
+        ground_box_shape.SetAsOrientedBox(bunny.width * B2_METERS / 2.0, bunny.height * B2_METERS / 2.0, new b2Math.b2Vec2(bunny.width * B2_METERS / 2.0, bunny.height * B2_METERS / 2.0), 0);
         var ground_fixture = new b2Dynamics.b2FixtureDef();
         ground_fixture.shape = ground_box_shape;
         ground_fixture.density = .5;
@@ -112,7 +113,7 @@ window.onload = function () {
         ground_body_def2.position.Set(100.0 * B2_METERS, 0);
         ground_body2 = world.CreateBody(ground_body_def2);
         var ground_box_shape2 = new b2Shapes.b2PolygonShape();
-        ground_box_shape2.SetAsBox(bunny.width * B2_METERS, bunny.height * B2_METERS);
+        ground_box_shape2.SetAsOrientedBox(bunny.width * B2_METERS / 2.0, bunny.height * B2_METERS / 2.0, new b2Math.b2Vec2(bunny.width * B2_METERS / 2.0, bunny.height * B2_METERS / 2.0), 0);
         var ground_fixture2 = new b2Dynamics.b2FixtureDef();
         ground_fixture2.shape = ground_box_shape2;
         ground_fixture2.density = .5;
@@ -159,6 +160,7 @@ setInterval(function () {
     ms_accum = 0;
     frame_count = 0;
 }, 1000);
+var a = 0;
 function physics_debug_draw(body, w, h) {
     var pos = body.GetPosition();
     var angle = body.GetAngle();
@@ -200,14 +202,17 @@ function game_loop() {
     else if (keys_down[40]) {
         v.y += .4;
     }
-    v.x = Math.max(v.x, -10) * .98;
-    v.x = Math.min(v.x, 10) * .98;
-    v.y = Math.max(v.y, -10) * .98;
-    v.y = Math.min(v.y, 10) * .98;
+    v.x = Math.max(v.x, -10) * .99;
+    v.x = Math.min(v.x, 10) * .99;
+    v.y = Math.max(v.y, -10) * .99;
+    v.y = Math.min(v.y, 10) * .99;
     graphics.clear();
     physics_debug_draw(ground_body, bunny.width, bunny.height);
     physics_debug_draw(ground_body2, bunny.width, bunny.height);
     physics_debug_draw(body, renderer.width / 2.0, 40);
+    ++a;
+    body.SetAngle(Math.cos(a / 40.0) / 2.0);
+    console.log(ground_body.GetPosition().y + ", " + body.GetPosition().y);
     var mesh = terrain_container.terrain_list[1].fill_mesh;
     var vertices = mesh.get_static_vertices();
     var indices = mesh.get_static_indices();
