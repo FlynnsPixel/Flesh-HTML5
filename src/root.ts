@@ -91,13 +91,13 @@ window.onload = function() {
 		bunny = new PIXI.Sprite(texture_bunny);
 		ui_layer.addChild(bunny);
 
-		world = new box2d.b2World(new box2d.b2Vec2(0, 0));
+		world = new box2d.b2World(new box2d.b2Vec2(0.0, 9.8));
 
 		var body_def = new box2d.b2BodyDef();
 		body_def.position.SetXY(0.0, 200.0);
 
 		var body = world.CreateBody(body_def);
-		body.SetAngleRadians(45);
+		body.SetAngleRadians(45 / (180 / Math.PI));
 
 		var box_shape = new box2d.b2PolygonShape();
 		box_shape.SetAsBox(100.0, 40.0);
@@ -118,11 +118,14 @@ window.onload = function() {
 
 		var ground_fixture = new box2d.b2FixtureDef();
 		ground_fixture.shape = ground_box_shape;
-		ground_fixture.density = 1.0;
+		ground_fixture.density = .5;
+		ground_fixture.friction = .5;
+		ground_fixture.restitution = .8;
 
 		ground_body.CreateFixture(ground_fixture);
-		ground_body.m_mass = 1;
-		//console.log(ground_body.);
+		ground_body.m_mass = 0;
+		ground_body.SetFixedRotation(true);
+		console.log(ground_body_def);
 
 		graphics = new PIXI.Graphics();
 		ui_layer.addChild(graphics);
@@ -152,32 +155,22 @@ function mouse_up() {
 	is_adding = false;
 }
 
+var fps = 0;
+var fps_accum = 0;
+var ms_accum = 0;
+var frame_count = 0;
+var dt = 0;
+var time_step = 1.0 / 60.0;
 setInterval(function() {
-	console.log("fps: " + fps.getFPS() + ", squares: " + squares.length);
+	console.log("fps: " + Math.round(fps_accum / frame_count) + ", ms: " + Math.round(ms_accum / frame_count) + ", squares: " + squares.length);
+	fps_accum = 0;
+	ms_accum = 0;
+	frame_count = 0;
 }, 1000);
 
-var fps = {
-	startTime : 0,
-	frameNumber : 0,
-	getFPS : function(){
-		this.frameNumber++;
-		var d = new Date().getTime(),
-			currentTime = ( d - this.startTime ) / 1000,
-			result = Math.floor( ( this.frameNumber / currentTime ) );
-
-		if( currentTime > 1 ){
-			this.startTime = new Date().getTime();
-			this.frameNumber = 0;
-		}
-		return result;
-
-	}
-};
-
 function game_loop() {
-	setTimeout(game_loop, 1000.0 / 60.0);
+	var start_time = new Date().getTime();
 
-	var time_step = 1.0 / 60.0;
 	//only for collision, the higher the value, the better collision
 	//accuracy at the cost of performance
 	var vel_iterations = 6;
@@ -188,24 +181,22 @@ function game_loop() {
 	var pos = ground_body.GetPosition();
 	var angle = ground_body.GetAngleRadians();
 
-	bunny.x = pos.x + 200;
-	bunny.y = pos.y + 200;
+	bunny.x = pos.x;
+	bunny.y = pos.y;
 
 	graphics.clear();
 	graphics.beginFill(0x00ff00);
 	graphics.fillAlpha = .4;
 	graphics.lineStyle(1, 0x000000, .4);
 
-	var x = pos.x + 200;
-	var y = pos.y + 200;
+	var x = pos.x;
+	var y = pos.y;
 	var w = 32;
 	var h = 32;
-	ground_body.SetAngleRadians(angle + 2);
-	var a = angle / (180 / Math.PI);
 	var origin_x = w / 2.0;
 	var origin_y = h / 2.0;
-	var c = Math.cos(a);
-	var s = Math.sin(a);
+	var c = Math.cos(angle);
+	var s = Math.sin(angle);
 	x += origin_x;
 	y += origin_y;
 	w -= origin_x;
@@ -238,7 +229,6 @@ function game_loop() {
 	game_layer.scale.y -= (game_layer.scale.y - dest_scale) / 4.0;
 	ui_layer.scale = game_layer.scale;
 
-	fps.getFPS();
 	if (is_adding) {
 		spawn_square(100);
 	}
@@ -256,4 +246,16 @@ function game_loop() {
 	}
 
 	renderer.render(stage);
+
+	dt = new Date().getTime() - start_time;
+	fps = 60;
+	if (dt >= time_step * 1000.0) fps = 1000.0 / dt;
+	fps_accum += fps;
+	ms_accum += dt;
+	++frame_count;
+	if (dt >= time_step * 1000.0) {
+		setTimeout(game_loop, 0);
+	}else {
+		setTimeout(game_loop, (time_step * 1000.0) - dt);
+	}
 }
