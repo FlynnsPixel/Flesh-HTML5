@@ -1,23 +1,7 @@
 /// <reference path="../lib-ts/pixi.js.d.ts" />
-/// <reference path="../lib-ts/box2d-web.d.ts"/>
-var b2Common = Box2D.Common;
-var b2Math = Box2D.Common.Math;
-var b2Collision = Box2D.Collision;
-var b2Shapes = Box2D.Collision.Shapes;
-var b2Dynamics = Box2D.Dynamics;
-var b2Contacts = Box2D.Dynamics.Contacts;
-var b2Controllers = Box2D.Dynamics.Controllers;
-var b2Joints = Box2D.Dynamics.Joints;
-var Square = (function () {
-    function Square() {
-    }
-    return Square;
-})();
-;
 var stage;
 var renderer;
 var padding = 15;
-var squares = [];
 var container;
 var is_adding;
 var dest_scale = 1;
@@ -39,17 +23,6 @@ function resize_canvas() {
     renderer.view.style.height = h + "px";
     renderer.resize(w, h);
     console.log("resize: " + renderer.width + "x" + renderer.height);
-}
-function spawn_square(amount) {
-    for (var n = 0; n < amount; ++n) {
-        var square = new Square();
-        square.base = new PIXI.Sprite(texture_bunny);
-        square.base.x = Math.random() * renderer.width;
-        square.base.y = Math.random() * renderer.height;
-        square.angle = Math.random() * Math.PI * 2.0;
-        container.addChild(square.base);
-        squares.push(square);
-    }
 }
 window.onload = function () {
     renderer = new PIXI.WebGLRenderer(400, 300, { antialias: false });
@@ -85,17 +58,18 @@ window.onload = function () {
         ground.set_pos(0, 400);
         box1 = new PhysicsObject(PhysicsBodyType.DYNAMIC);
         box1.create_box(bunny.width, bunny.height);
-        box1.fixture_def.density = .5;
-        box1.fixture_def.friction = .5;
-        box1.fixture_def.restitution = .4;
+        box1.fixture.SetDensity(.5);
+        box1.fixture.SetFriction(.5);
+        box1.fixture.SetRestitution(.4);
+        box1.body.ResetMassData();
         box1.set_x(400);
         box2 = new PhysicsObject(PhysicsBodyType.DYNAMIC);
         box2.create_box(bunny.width, bunny.height);
-        box2.fixture_def.density = .5;
-        box2.fixture_def.friction = .5;
-        box2.fixture_def.restitution = .4;
-        box2.set_x(100);
-        spawn_square(1);
+        box2.fixture.SetDensity(.5);
+        box2.fixture.SetFriction(.5);
+        box2.fixture.SetRestitution(.4);
+        box2.body.ResetMassData();
+        box2.set_x(250);
         game_loop();
     });
 };
@@ -128,7 +102,7 @@ var dt = 0;
 var time_step = 1.0 / 60.0;
 var time_since_startup = 0;
 setInterval(function () {
-    console.log("fps: " + Math.round(fps_accum / frame_count) + ", ms: " + Math.round(ms_accum / frame_count) + ", squares: " + squares.length);
+    console.log("fps: " + Math.round(fps_accum / frame_count) + ", ms: " + Math.round(ms_accum / frame_count));
     fps_accum = 0;
     ms_accum = 0;
     frame_count = 0;
@@ -137,9 +111,6 @@ var a = 0;
 function game_loop() {
     var start_time = new Date().getTime();
     update_physics();
-    var vel_iterations = 6;
-    var pos_iterations = 2;
-    world.Step(time_step, vel_iterations, pos_iterations);
     var v = box1.body.GetLinearVelocity();
     if (keys_down[37]) {
         v.x -= .4;
@@ -157,25 +128,12 @@ function game_loop() {
     v.x = Math.min(v.x, 10) * .99;
     v.y = Math.max(v.y, -10) * .99;
     v.y = Math.min(v.y, 10) * .99;
+    console.log(box1.body.GetAngle());
     update_physics();
     ++a;
     game_layer.scale.x -= (game_layer.scale.x - dest_scale) / 4.0;
     game_layer.scale.y -= (game_layer.scale.y - dest_scale) / 4.0;
     ui_layer.scale = game_layer.scale;
-    if (is_adding) {
-        spawn_square(100);
-    }
-    for (var n = 0; n < squares.length; ++n) {
-        var square = squares[n];
-        if (square.base.position.x < 0 || square.base.position.x > renderer.width - square.base.width) {
-            square.angle = -square.angle + Math.PI;
-        }
-        if (square.base.position.y < 0 || square.base.position.y > renderer.height - square.base.height) {
-            square.angle = -square.angle;
-        }
-        square.base.position.x += Math.cos(square.angle) * 4.0;
-        square.base.position.y += Math.sin(square.angle) * 4.0;
-    }
     renderer.render(stage);
     dt = new Date().getTime() - start_time;
     fps = 60;

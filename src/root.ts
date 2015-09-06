@@ -1,25 +1,8 @@
 /// <reference path="../lib-ts/pixi.js.d.ts" />
-/// <reference path="../lib-ts/box2d-web.d.ts"/>
-
-import b2Common = Box2D.Common;
-import b2Math = Box2D.Common.Math;
-import b2Collision = Box2D.Collision;
-import b2Shapes = Box2D.Collision.Shapes;
-import b2Dynamics = Box2D.Dynamics;
-import b2Contacts = Box2D.Dynamics.Contacts;
-import b2Controllers = Box2D.Dynamics.Controllers;
-import b2Joints = Box2D.Dynamics.Joints;
-
-class Square {
-
-	base: PIXI.Sprite;
-	angle: number;
-};
 
 var stage: PIXI.Container;
 var renderer: PIXI.CanvasRenderer | PIXI.WebGLRenderer;
 const padding = 15;
-var squares: Square[] = [];
 var container: PIXI.ParticleContainer;
 var is_adding: boolean;
 var dest_scale: number = 1;
@@ -45,21 +28,6 @@ function resize_canvas() {
 	renderer.view.style.height = h + "px";
 	renderer.resize(w, h);
 	console.log("resize: " + renderer.width + "x" + renderer.height);
-}
-
-function spawn_square(amount: number) {
-	for (var n = 0; n < amount; ++n) {
-		var square = new Square();
-		square.base = new PIXI.Sprite(texture_bunny);
-
-		square.base.x = Math.random() * renderer.width;
-		square.base.y = Math.random() * renderer.height;
-
-		square.angle = Math.random() * Math.PI * 2.0;
-
-		container.addChild(square.base);
-		squares.push(square);
-	}
 }
 
 window.onload = function() {
@@ -107,19 +75,20 @@ window.onload = function() {
 
 		box1 = new PhysicsObject(PhysicsBodyType.DYNAMIC);
 		box1.create_box(bunny.width, bunny.height);
-		box1.fixture_def.density = .5;
-		box1.fixture_def.friction = .5;
-		box1.fixture_def.restitution = .4;
+		box1.fixture.SetDensity(.5);
+		box1.fixture.SetFriction(.5);
+		box1.fixture.SetRestitution(.4);
+		box1.body.ResetMassData();
 		box1.set_x(400);
 
 		box2 = new PhysicsObject(PhysicsBodyType.DYNAMIC);
 		box2.create_box(bunny.width, bunny.height);
-		box2.fixture_def.density = .5;
-		box2.fixture_def.friction = .5;
-		box2.fixture_def.restitution = .4;
-		box2.set_x(100);
-		
-		spawn_square(1);
+		box2.fixture.SetDensity(.5);
+		box2.fixture.SetFriction(.5);
+		box2.fixture.SetRestitution(.4);
+		box2.body.ResetMassData();
+		box2.set_x(250);
+
 		game_loop();
 	});
 }
@@ -159,7 +128,7 @@ var dt = 0;
 var time_step = 1.0 / 60.0;
 var time_since_startup = 0;
 setInterval(function() {
-	console.log("fps: " + Math.round(fps_accum / frame_count) + ", ms: " + Math.round(ms_accum / frame_count) + ", squares: " + squares.length);
+	console.log("fps: " + Math.round(fps_accum / frame_count) + ", ms: " + Math.round(ms_accum / frame_count));
 	fps_accum = 0;
 	ms_accum = 0;
 	frame_count = 0;
@@ -171,13 +140,6 @@ function game_loop() {
 	var start_time = new Date().getTime();
 
 	update_physics();
-
-	//only for collision, the higher the value, the better collision
-	//accuracy at the cost of performance
-	var vel_iterations = 6;
-	var pos_iterations = 2;
-
-	world.Step(time_step, vel_iterations, pos_iterations);
 
 	var v = box1.body.GetLinearVelocity();
 	if (keys_down[37]) {
@@ -196,10 +158,11 @@ function game_loop() {
 	v.y = Math.max(v.y, -10) * .99;
 	v.y = Math.min(v.y, 10) * .99;
 
+	console.log(box1.body.GetAngle());
 	update_physics();
 
 	++a;
-	//body.SetAngle(Math.cos(a / 40.0) / 2.0);
+	//ground.body.SetAngle(Math.cos(a / 10.0) / 2.0);
 
 	/*
 	var mesh = terrain_container.terrain_list[1].fill_mesh;
@@ -224,22 +187,6 @@ function game_loop() {
 	game_layer.scale.x -= (game_layer.scale.x - dest_scale) / 4.0;
 	game_layer.scale.y -= (game_layer.scale.y - dest_scale) / 4.0;
 	ui_layer.scale = game_layer.scale;
-
-	if (is_adding) {
-		spawn_square(100);
-	}
-
-	for (var n = 0; n < squares.length; ++n) {
-		var square = squares[n];
-		if (square.base.position.x < 0 || square.base.position.x > renderer.width - square.base.width) {
-			square.angle = -square.angle + Math.PI;
-		}
-		if (square.base.position.y < 0 || square.base.position.y > renderer.height - square.base.height) {
-			square.angle = -square.angle;
-		}
-		square.base.position.x += Math.cos(square.angle) * 4.0;
-		square.base.position.y += Math.sin(square.angle) * 4.0;
-	}
 
 	renderer.render(stage);
 

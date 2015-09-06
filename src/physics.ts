@@ -1,3 +1,13 @@
+/// <reference path="../lib-ts/box2d-web.d.ts"/>
+
+import b2Common = Box2D.Common;
+import b2Math = Box2D.Common.Math;
+import b2Collision = Box2D.Collision;
+import b2Shapes = Box2D.Collision.Shapes;
+import b2Dynamics = Box2D.Dynamics;
+import b2Contacts = Box2D.Dynamics.Contacts;
+import b2Controllers = Box2D.Dynamics.Controllers;
+import b2Joints = Box2D.Dynamics.Joints;
 
 enum PhysicsBodyType {
   STATIC,
@@ -9,7 +19,7 @@ class PhysicsObject {
 
   body_def: b2Dynamics.b2BodyDef;
   body: b2Dynamics.b2Body;
-  fixture_def: b2Dynamics.b2FixtureDef;
+  fixture: b2Dynamics.b2Fixture;
   shape: b2Shapes.b2Shape;
 
   body_type: PhysicsBodyType;
@@ -37,11 +47,11 @@ class PhysicsObject {
     var h = (height * B2_METERS) / 2.0;
 		box_shape.SetAsOrientedBox(w, h, new b2Math.b2Vec2(w, h), 0);
 
-    this.fixture_def = new b2Dynamics.b2FixtureDef();
-		this.fixture_def.shape = box_shape;
+    var fixture_def = new b2Dynamics.b2FixtureDef();
+		fixture_def.shape = box_shape;
     this.shape = box_shape;
-    this.body.CreateFixture(this.fixture_def);
-
+    this.body.CreateFixture(fixture_def);
+    this.fixture = this.body.GetFixtureList();
     this.calculate_aabb();
   }
 
@@ -110,10 +120,10 @@ class PhysicsDebug {
   	var y = pos.y / B2_METERS;
     var w = this.parent.aabb.upperBound.x / B2_METERS;
     var h = this.parent.aabb.upperBound.y / B2_METERS;
-  	this.graphics.moveTo(x + ((c * origin_x) - (s * origin_y)), y + ((s * origin_x) + (c * origin_y)));
-  	this.graphics.lineTo(x + ((c * w) - (s * origin_y)), y + ((s * w) + (c * origin_y)));
+  	this.graphics.moveTo(x, y);
+  	this.graphics.lineTo(x + (c * w), y + (s * w));
   	this.graphics.lineTo(x + ((c * w) - (s * h)), y + ((s * w) + (c * h)));
-  	this.graphics.lineTo(x + ((c * origin_x) - (s * h)), y + ((s * origin_x) + (c * h)));
+  	this.graphics.lineTo(x - (s * h), y + (c * h));
 
     this.graphics.endFill();
   }
@@ -123,11 +133,18 @@ var world: b2Dynamics.b2World;
 var B2_METERS = .01;
 var physics_objects: PhysicsObject[] = [];
 
+//only for collision, the higher the value, the better collision
+//accuracy at the cost of performance
+var vel_iterations = 6;
+var pos_iterations = 2;
+
 function init_physics() {
   world = new b2Dynamics.b2World(new b2Math.b2Vec2(0.0, 9.8), false);
 }
 
 function update_physics() {
+  world.Step(1 / 120.0, vel_iterations, pos_iterations);
+
   for (var n = 0; n < physics_objects.length; ++n) {
     physics_objects[n].update();
   }

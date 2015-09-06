@@ -1,3 +1,12 @@
+/// <reference path="../lib-ts/box2d-web.d.ts"/>
+var b2Common = Box2D.Common;
+var b2Math = Box2D.Common.Math;
+var b2Collision = Box2D.Collision;
+var b2Shapes = Box2D.Collision.Shapes;
+var b2Dynamics = Box2D.Dynamics;
+var b2Contacts = Box2D.Dynamics.Contacts;
+var b2Controllers = Box2D.Dynamics.Controllers;
+var b2Joints = Box2D.Dynamics.Joints;
 var PhysicsBodyType;
 (function (PhysicsBodyType) {
     PhysicsBodyType[PhysicsBodyType["STATIC"] = 0] = "STATIC";
@@ -24,10 +33,11 @@ var PhysicsObject = (function () {
         var w = (width * B2_METERS) / 2.0;
         var h = (height * B2_METERS) / 2.0;
         box_shape.SetAsOrientedBox(w, h, new b2Math.b2Vec2(w, h), 0);
-        this.fixture_def = new b2Dynamics.b2FixtureDef();
-        this.fixture_def.shape = box_shape;
+        var fixture_def = new b2Dynamics.b2FixtureDef();
+        fixture_def.shape = box_shape;
         this.shape = box_shape;
-        this.body.CreateFixture(this.fixture_def);
+        this.body.CreateFixture(fixture_def);
+        this.fixture = this.body.GetFixtureList();
         this.calculate_aabb();
     };
     PhysicsObject.prototype.calculate_aabb = function () {
@@ -82,10 +92,10 @@ var PhysicsDebug = (function () {
         var y = pos.y / B2_METERS;
         var w = this.parent.aabb.upperBound.x / B2_METERS;
         var h = this.parent.aabb.upperBound.y / B2_METERS;
-        this.graphics.moveTo(x + ((c * origin_x) - (s * origin_y)), y + ((s * origin_x) + (c * origin_y)));
-        this.graphics.lineTo(x + ((c * w) - (s * origin_y)), y + ((s * w) + (c * origin_y)));
+        this.graphics.moveTo(x, y);
+        this.graphics.lineTo(x + (c * w), y + (s * w));
         this.graphics.lineTo(x + ((c * w) - (s * h)), y + ((s * w) + (c * h)));
-        this.graphics.lineTo(x + ((c * origin_x) - (s * h)), y + ((s * origin_x) + (c * h)));
+        this.graphics.lineTo(x - (s * h), y + (c * h));
         this.graphics.endFill();
     };
     return PhysicsDebug;
@@ -94,10 +104,13 @@ var PhysicsDebug = (function () {
 var world;
 var B2_METERS = .01;
 var physics_objects = [];
+var vel_iterations = 6;
+var pos_iterations = 2;
 function init_physics() {
     world = new b2Dynamics.b2World(new b2Math.b2Vec2(0.0, 9.8), false);
 }
 function update_physics() {
+    world.Step(1 / 120.0, vel_iterations, pos_iterations);
     for (var n = 0; n < physics_objects.length; ++n) {
         physics_objects[n].update();
     }
