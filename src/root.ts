@@ -68,11 +68,12 @@ window.onload = function() {
 		document.onkeyup = on_key_up;
 
 		bunny = new PIXI.Sprite(texture_bunny);
-		ui_layer.addChild(bunny);
+		game_layer.addChild(bunny);
 
 		ground = new PhysicsObject();
-		ground.create_box(400, 40);
+		ground.create_box(40, 400);
 		ground.set_pos(0 + game_layer.pivot.x - game_layer.x, 400 + game_layer.pivot.y - game_layer.y);
+		ground.body.SetAngle(-15 / (180 / Math.PI));
 
 		box1 = new PhysicsObject(PhysicsBodyType.DYNAMIC);
 		box1.create_box(bunny.width, bunny.height);
@@ -141,8 +142,6 @@ setInterval(function() {
 	frame_count = 0;
 }, 1000);
 
-var a = 0;
-
 function game_loop() {
 	var start_time = new Date().getTime();
 
@@ -167,9 +166,8 @@ function game_loop() {
 
 	update_physics();
 
-	++a;
-	//ground.body.SetAngle(Math.cos(a / 10.0) / 2.0);
-
+	box1.set_sprite_pos(bunny);
+	
 	/*
 	var mesh = terrain_container.terrain_list[1].fill_mesh;
 	var vertices = mesh.get_static_vertices();
