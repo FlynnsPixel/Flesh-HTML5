@@ -30,6 +30,11 @@ class PhysicsObject {
   private physics_origin: b2Math.b2Vec2 = new b2Math.b2Vec2(0, 0);
   private origin: b2Math.b2Vec2 = new b2Math.b2Vec2(0, 0);
 
+  /**
+  * creates a physics object of a specific body type
+  * physics objects are objects of any shape that have physics
+  * properties applied to them
+  **/
   constructor(type?: PhysicsBodyType) {
     if (type) this.body_type = type;
     else this.body_type = PhysicsBodyType.STATIC;
@@ -44,11 +49,17 @@ class PhysicsObject {
     physics_objects.push(this);
   }
 
+  /**
+  * creates a box shape with specified width, height and pos, rotation origin
+  **/
   create_box(width: number, height: number, origin?: b2Math.b2Vec2) {
     var box_shape = new b2Shapes.b2PolygonShape();
     var w = (width * B2_METERS) / 2.0;
     var h = (height * B2_METERS) / 2.0;
 
+    //box2d's origin argument is pretty messy imo, so there are a lot
+    //of calculations here to correctly calculate the origin for
+    //box2d and for debug drawing
     if (!origin) {
       origin = new b2Math.b2Vec2(0, 0);
       this.physics_origin = origin;
@@ -76,11 +87,16 @@ class PhysicsObject {
     this.calculate_aabb();
   }
 
+  /**
+  * creates edge shapes from the points array argument
+  **/
   create_edges(points: number[], scale?: number, pos_offset?: PIXI.Point) {
     if (!scale) scale = 1;
     if (!pos_offset) pos_offset = new PIXI.Point(0, 0);
 
     this.is_debug_drawing = true;
+    //loops through points array and creates an edge shape for every
+    //2 points in the array
     for (var n = 0; n < points.length; n += 2) {
       if (n + 3 >= points.length) break;
       var edge_shape = new b2Shapes.b2PolygonShape();
@@ -96,6 +112,9 @@ class PhysicsObject {
     this.calculate_aabb();
   }
 
+  /**
+  * calculates combined aabb of physics object
+  **/
   calculate_aabb() {
     this.aabb.lowerBound = new b2Math.b2Vec2(10000, 10000);
     this.aabb.upperBound = new b2Math.b2Vec2(-10000, -10000);
@@ -106,12 +125,18 @@ class PhysicsObject {
     }
   }
 
+  /**
+  * updates debug drawing and more
+  **/
   update() {
     if (this.is_debug_drawing) {
       this.debug.draw();
     }
   }
 
+  /**
+  * sets position of this physics body
+  **/
   set_pos(x: number, y: number) {
     var v = this.body.GetPosition();
     v.x = x * B2_METERS;
@@ -119,14 +144,24 @@ class PhysicsObject {
     this.body.SetPosition(v);
   }
 
+  /**
+  * sets x position of this physics body
+  **/
   set_x(x: number) {
     this.set_pos(x, this.body.GetPosition().y);
   }
 
+  /**
+  * sets y position of this physics body
+  **/
   set_y(y: number) {
     this.set_pos(this.body.GetPosition().x, y);
   }
 
+  /**
+  * sets sprite pos, rotation, ect, equal to that of this physics body
+  * useful for attaching sprites to physics objects
+  **/
   set_sprite_pos(sprite: PIXI.Sprite) {
     sprite.x = (this.body.GetPosition().x / B2_METERS);
   	sprite.y = (this.body.GetPosition().y / B2_METERS);
@@ -155,45 +190,44 @@ class PhysicsDebug {
   graphics: PIXI.Graphics;
   parent: PhysicsObject;
 
+  /**
+  * constructs a physics debug object with a physics object parent
+  **/
   constructor(parent: PhysicsObject) {
+    this.draw
     this.parent = parent;
 
     this.graphics = new PIXI.Graphics();
     game_layer.addChild(this.graphics);
   }
 
+  /**
+  * draws all fixtures from the parent physics object
+  **/
   draw() {
     this.graphics.clear();
-    this.graphics.beginFill(0x00ff00);
-  	this.graphics.fillAlpha = .4;
-  	this.graphics.lineStyle(1, 0x000000, .4);
 
     var pos = this.parent.body.GetPosition();
     var angle = this.parent.body.GetAngle();
 
+    //loops through all fixtures of physics object body and draws them
     var fixture = this.parent.body.GetFixtureList();
     while (fixture) {
       var shape = <b2Shapes.b2PolygonShape>fixture.GetShape();
       var verts: b2Math.b2Vec2[] = shape.GetVertices();
+
       var draw_type = PhysicsDebugDrawType.UNKNOWN;
-      if (verts.length == 2) {
-        draw_type = PhysicsDebugDrawType.EDGE;
-
-        this.graphics.lineStyle(10, 0x000000, 1);
-      }else if (verts.length == 4) {
-        draw_type = PhysicsDebugDrawType.BOX;
-
-        this.graphics.beginFill(0x00ff00);
-        this.graphics.fillAlpha = .4;
-        this.graphics.lineStyle(1, 0x000000, .4);
-      }
+      if (verts.length == 2) draw_type = PhysicsDebugDrawType.EDGE;
+      else if (verts.length == 4) draw_type = PhysicsDebugDrawType.BOX;
 
       switch (draw_type) {
       case PhysicsDebugDrawType.BOX:
+        //draws a box from shape vertices and rotate it with it's origin point
+        this.graphics.beginFill(0x00ff00);
+        this.graphics.fillAlpha = .4;
+        this.graphics.lineStyle(1, 0x000000, .4);
+
         var c = Math.cos(angle), s = Math.sin(angle);
-      	var x = pos.x / B2_METERS, y = pos.y / B2_METERS;
-        var w = this.parent.aabb.upperBound.x / B2_METERS;
-        var h = this.parent.aabb.upperBound.y / B2_METERS;
         var origin_x = this.parent.get_physics_origin().x / B2_METERS;
 
         for (var n = 0; n < verts.length; ++n) {
@@ -202,12 +236,13 @@ class PhysicsDebug {
           var x = (pos.x / B2_METERS) - (c * (vx - origin_x) + s * vy);
           var y = (pos.y / B2_METERS) + (-s * (vx - origin_x) + c * vy);
           if (n == 0) this.graphics.moveTo(x, y);
-        	if (n == 1) this.graphics.lineTo(x, y);
-        	if (n == 2) this.graphics.lineTo(x, y);
-          if (n == 3) this.graphics.lineTo(x, y);
+          else this.graphics.lineTo(x, y);
         }
         break;
       case PhysicsDebugDrawType.EDGE:
+        //draws edges from shape vertices by drawing a line to each point
+        this.graphics.lineStyle(4, 0x000000, 1);
+
         for (var n = 0; n < verts.length; ++n) {
           var x = (verts[n].x + pos.x) / B2_METERS;
           var y = (verts[n].y + pos.y) / B2_METERS;
@@ -222,21 +257,6 @@ class PhysicsDebug {
       this.graphics.endFill();
       fixture = fixture.GetNext();
     }
-
-    /*
-  	var origin_x = 0;
-  	var origin_y = 0;
-  	var c = Math.cos(angle);
-  	var s = Math.sin(angle);
-  	var x = pos.x / B2_METERS;
-  	var y = pos.y / B2_METERS;
-    var w = this.parent.aabb.upperBound.x / B2_METERS;
-    var h = this.parent.aabb.upperBound.y / B2_METERS;
-  	this.graphics.moveTo(x, y);
-  	this.graphics.lineTo(x + (c * w), y + (s * w));
-  	this.graphics.lineTo(x + ((c * w) - (s * h)), y + ((s * w) + (c * h)));
-  	this.graphics.lineTo(x - (s * h), y + (c * h));
-    */
   }
 };
 
