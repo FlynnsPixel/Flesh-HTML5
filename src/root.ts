@@ -29,12 +29,9 @@ var terrain_container: TerrainContainer;
 
 var bunny: PIXI.Sprite;
 
-var body: b2Dynamics.b2Body;
-var ground_body: b2Dynamics.b2Body;
-var ground_body2: b2Dynamics.b2Body;
-var ground_box_shape: b2Shapes.b2PolygonShape;
-var graphics: PIXI.Graphics;
-var B2_METERS = .01;
+var ground: PhysicsObject;
+var box1: PhysicsObject;
+var box2: PhysicsObject;
 
 var keys_down: boolean[] = [];
 
@@ -104,43 +101,20 @@ window.onload = function() {
 		bunny = new PIXI.Sprite(texture_bunny);
 		ui_layer.addChild(bunny);
 
-		
+		ground = new PhysicsObject();
+		ground.create_box(400, 40);
 
+		box1 = new PhysicsObject(PhysicsBodyType.DYNAMIC);
+		box1.fixture_def.density = .5;
+		box1.fixture_def.friction = .5;
+		box1.fixture_def.restitution = .4;
+		box1.create_box(bunny.width, bunny.height);
 
-		var ground_body_def = new b2Dynamics.b2BodyDef();
-		ground_body_def.type = 2;
-		ground_body_def.position.Set(400.0 * B2_METERS, 0);
-
-		ground_body = world.CreateBody(ground_body_def);
-
-		ground_box_shape = new b2Shapes.b2PolygonShape();
-		ground_box_shape.SetAsOrientedBox(bunny.width * B2_METERS / 2.0, bunny.height * B2_METERS / 2.0, new b2Math.b2Vec2(bunny.width * B2_METERS / 2.0, bunny.height * B2_METERS / 2.0), 0);
-
-		var ground_fixture = new b2Dynamics.b2FixtureDef();
-		ground_fixture.shape = ground_box_shape;
-		ground_fixture.density = .5;
-		ground_fixture.friction = .5;
-		ground_fixture.restitution = .4;
-
-		ground_body.CreateFixture(ground_fixture);
-
-
-		var ground_body_def2 = new b2Dynamics.b2BodyDef();
-		ground_body_def2.type = 2;
-		ground_body_def2.position.Set(100.0 * B2_METERS, 0);
-
-		ground_body2 = world.CreateBody(ground_body_def2);
-
-		var ground_box_shape2 = new b2Shapes.b2PolygonShape();
-		ground_box_shape2.SetAsOrientedBox(bunny.width * B2_METERS / 2.0, bunny.height * B2_METERS / 2.0, new b2Math.b2Vec2(bunny.width * B2_METERS / 2.0, bunny.height * B2_METERS / 2.0), 0);
-
-		var ground_fixture2 = new b2Dynamics.b2FixtureDef();
-		ground_fixture2.shape = ground_box_shape2;
-		ground_fixture2.density = .5;
-		ground_fixture2.friction = .5;
-		ground_fixture2.restitution = .4;
-
-		ground_body2.CreateFixture(ground_fixture2);
+		box2 = new PhysicsObject(PhysicsBodyType.DYNAMIC);
+		box2.fixture_def.density = .5;
+		box2.fixture_def.friction = .5;
+		box2.fixture_def.restitution = .4;
+		box2.create_box(bunny.width, bunny.height);
 
 		graphics = new PIXI.Graphics();
 		ui_layer.addChild(graphics);
@@ -192,29 +166,6 @@ setInterval(function() {
 }, 1000);
 
 var a = 0;
-function physics_debug_draw(body: b2Dynamics.b2Body, w: number, h: number) {
-	var pos = body.GetPosition();
-	var angle = body.GetAngle();
-
-	graphics.beginFill(0x00ff00);
-	graphics.fillAlpha = .4;
-	graphics.lineStyle(1, 0x000000, .4);
-
-	var origin_x = 0;
-	var origin_y = 0;
-	var c = Math.cos(angle);
-	var s = Math.sin(angle);
-	var x = (pos.x / B2_METERS) + origin_x;
-	var y = (pos.y / B2_METERS) + origin_y;
-	w -= origin_x;
-	h -= origin_y;
-	origin_x = -origin_x;
-	origin_y = -origin_y;
-	graphics.moveTo(x + ((c * origin_x) - (s * origin_y)), y + ((s * origin_x) + (c * origin_y)));
-	graphics.lineTo(x + ((c * w) - (s * origin_y)), y + ((s * w) + (c * origin_y)));
-	graphics.lineTo(x + ((c * w) - (s * h)), y + ((s * w) + (c * h)));
-	graphics.lineTo(x + ((c * origin_x) - (s * h)), y + ((s * origin_x) + (c * h)));
-}
 
 function game_loop() {
 	var start_time = new Date().getTime();
