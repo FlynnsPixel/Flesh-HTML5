@@ -26,9 +26,6 @@ class PhysicsObject {
 
 		this.body = world.CreateBody(this.body_def);
 
-		this.fixture_def = new b2Dynamics.b2FixtureDef();
-		this.body.CreateFixture(this.fixture_def);
-
     this.aabb = new b2Collision.b2AABB();
     this.debug = new PhysicsDebug(this);
     physics_objects.push(this);
@@ -40,8 +37,10 @@ class PhysicsObject {
     var h = (height * B2_METERS) / 2.0;
 		box_shape.SetAsOrientedBox(w, h, new b2Math.b2Vec2(w, h), 0);
 
+    this.fixture_def = new b2Dynamics.b2FixtureDef();
 		this.fixture_def.shape = box_shape;
     this.shape = box_shape;
+    this.body.CreateFixture(this.fixture_def);
 
     this.calculate_aabb();
   }
@@ -62,6 +61,21 @@ class PhysicsObject {
     }
   }
 
+  set_pos(x: number, y: number) {
+    var v = this.body.GetPosition();
+    v.x = x * B2_METERS;
+    v.y = y * B2_METERS;
+    this.body.SetPosition(v);
+  }
+
+  set_x(x: number) {
+    this.set_pos(x, this.body.GetPosition().y);
+  }
+
+  set_y(y: number) {
+    this.set_pos(this.body.GetPosition().x, y);
+  }
+
   remove() {
 
   }
@@ -75,13 +89,15 @@ class PhysicsDebug {
   constructor(parent: PhysicsObject) {
     this.parent = parent;
 
-    this.graphics.beginFill(0x00ff00);
-  	this.graphics.fillAlpha = .4;
-  	this.graphics.lineStyle(1, 0x000000, .4);
+    this.graphics = new PIXI.Graphics();
+    ui_layer.addChild(this.graphics);
   }
 
   draw() {
     this.graphics.clear();
+    this.graphics.beginFill(0x00ff00);
+  	this.graphics.fillAlpha = .4;
+  	this.graphics.lineStyle(1, 0x000000, .4);
 
     var pos = this.parent.body.GetPosition();
     var angle = this.parent.body.GetAngle();
@@ -92,12 +108,14 @@ class PhysicsDebug {
   	var s = Math.sin(angle);
   	var x = pos.x / B2_METERS;
   	var y = pos.y / B2_METERS;
-    var w = this.parent.aabb.upperBound.x;
-    var h = this.parent.aabb.upperBound.y;
+    var w = this.parent.aabb.upperBound.x / B2_METERS;
+    var h = this.parent.aabb.upperBound.y / B2_METERS;
   	this.graphics.moveTo(x + ((c * origin_x) - (s * origin_y)), y + ((s * origin_x) + (c * origin_y)));
   	this.graphics.lineTo(x + ((c * w) - (s * origin_y)), y + ((s * w) + (c * origin_y)));
   	this.graphics.lineTo(x + ((c * w) - (s * h)), y + ((s * w) + (c * h)));
   	this.graphics.lineTo(x + ((c * origin_x) - (s * h)), y + ((s * origin_x) + (c * h)));
+
+    this.graphics.endFill();
   }
 };
 

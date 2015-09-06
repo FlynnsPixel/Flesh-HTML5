@@ -103,22 +103,22 @@ window.onload = function() {
 
 		ground = new PhysicsObject();
 		ground.create_box(400, 40);
+		ground.set_pos(0, 400);
 
 		box1 = new PhysicsObject(PhysicsBodyType.DYNAMIC);
+		box1.create_box(bunny.width, bunny.height);
 		box1.fixture_def.density = .5;
 		box1.fixture_def.friction = .5;
 		box1.fixture_def.restitution = .4;
-		box1.create_box(bunny.width, bunny.height);
+		box1.set_x(400);
 
 		box2 = new PhysicsObject(PhysicsBodyType.DYNAMIC);
+		box2.create_box(bunny.width, bunny.height);
 		box2.fixture_def.density = .5;
 		box2.fixture_def.friction = .5;
 		box2.fixture_def.restitution = .4;
-		box2.create_box(bunny.width, bunny.height);
-
-		graphics = new PIXI.Graphics();
-		ui_layer.addChild(graphics);
-
+		box2.set_x(100);
+		
 		spawn_square(1);
 		game_loop();
 	});
@@ -170,6 +170,8 @@ var a = 0;
 function game_loop() {
 	var start_time = new Date().getTime();
 
+	update_physics();
+
 	//only for collision, the higher the value, the better collision
 	//accuracy at the cost of performance
 	var vel_iterations = 6;
@@ -177,7 +179,7 @@ function game_loop() {
 
 	world.Step(time_step, vel_iterations, pos_iterations);
 
-	var v = ground_body.GetLinearVelocity();
+	var v = box1.body.GetLinearVelocity();
 	if (keys_down[37]) {
 		v.x -= .4;
 	}else if (keys_down[39]) {
@@ -194,69 +196,12 @@ function game_loop() {
 	v.y = Math.max(v.y, -10) * .99;
 	v.y = Math.min(v.y, 10) * .99;
 
-	graphics.clear();
-
-	physics_debug_draw(ground_body, bunny.width, bunny.height);
-	physics_debug_draw(ground_body2, bunny.width, bunny.height);
-	physics_debug_draw(body, renderer.width / 2.0, 40);
+	update_physics();
 
 	++a;
 	//body.SetAngle(Math.cos(a / 40.0) / 2.0);
 
 	/*
-	bunny.x = pos.x + (bunny.width / 2.0);
-	bunny.y = pos.y + (bunny.height / 2.0);
-	bunny.rotation = angle;
-	bunny.pivot.x = bunny.width / 2.0;
-	bunny.pivot.y = bunny.height / 2.0;
-
-	graphics.beginFill(0x00ff00);
-	graphics.fillAlpha = .4;
-	graphics.lineStyle(1, 0x000000, .4);
-
-	var x = pos.x;
-	var y = pos.y;
-	var w = bunny.width;
-	var h = bunny.height;
-	var origin_x = w / 2.0;
-	var origin_y = h / 2.0;
-	var c = Math.cos(angle);
-	var s = Math.sin(angle);
-	x += origin_x;
-	y += origin_y;
-	w -= origin_x;
-	h -= origin_y;
-	origin_x = -origin_x;
-	origin_y = -origin_y;
-	graphics.moveTo(x + ((c * origin_x) - (s * origin_y)), y + ((s * origin_x) + (c * origin_y)));
-	graphics.lineTo(x + ((c * w) - (s * origin_y)), y + ((s * w) + (c * origin_y)));
-	graphics.lineTo(x + ((c * w) - (s * h)), y + ((s * w) + (c * h)));
-	graphics.lineTo(x + ((c * origin_x) - (s * h)), y + ((s * origin_x) + (c * h)));
-
-	pos = body.GetPosition();
-	//body.SetAngleRadians(Math.cos(time_since_startup / 80.0) / 2.0);
-	body.SetAngleRadians(0 / (180 / Math.PI));
-	angle = body.GetAngleRadians();
-	x = pos.x;
-	y = pos.y;
-	w = renderer.width / 2.0;
-	h = 40;
-	origin_x = w / 2.0;
-	origin_y = h / 2.0;
-	c = Math.cos(angle);
-	s = Math.sin(angle);
-	x += origin_x;
-	y += origin_y;
-	w -= origin_x;
-	h -= origin_y;
-	origin_x = -origin_x;
-	origin_y = -origin_y;
-	graphics.moveTo(x + ((c * origin_x) - (s * origin_y)), y + ((s * origin_x) + (c * origin_y)));
-	graphics.lineTo(x + ((c * w) - (s * origin_y)), y + ((s * w) + (c * origin_y)));
-	graphics.lineTo(x + ((c * w) - (s * h)), y + ((s * w) + (c * h)));
-	graphics.lineTo(x + ((c * origin_x) - (s * h)), y + ((s * origin_x) + (c * h)));
-	*/
-
 	var mesh = terrain_container.terrain_list[1].fill_mesh;
 	var vertices = mesh.get_static_vertices();
 	var indices = mesh.get_static_indices();
@@ -274,6 +219,7 @@ function game_loop() {
 		}
 	}
 	graphics.endFill();
+	*/
 
 	game_layer.scale.x -= (game_layer.scale.x - dest_scale) / 4.0;
 	game_layer.scale.y -= (game_layer.scale.y - dest_scale) / 4.0;

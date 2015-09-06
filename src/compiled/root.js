@@ -82,18 +82,19 @@ window.onload = function () {
         ui_layer.addChild(bunny);
         ground = new PhysicsObject();
         ground.create_box(400, 40);
+        ground.set_pos(0, 400);
         box1 = new PhysicsObject(PhysicsBodyType.DYNAMIC);
+        box1.create_box(bunny.width, bunny.height);
         box1.fixture_def.density = .5;
         box1.fixture_def.friction = .5;
         box1.fixture_def.restitution = .4;
-        box1.create_box(bunny.width, bunny.height);
+        box1.set_x(400);
         box2 = new PhysicsObject(PhysicsBodyType.DYNAMIC);
+        box2.create_box(bunny.width, bunny.height);
         box2.fixture_def.density = .5;
         box2.fixture_def.friction = .5;
         box2.fixture_def.restitution = .4;
-        box2.create_box(bunny.width, bunny.height);
-        graphics = new PIXI.Graphics();
-        ui_layer.addChild(graphics);
+        box2.set_x(100);
         spawn_square(1);
         game_loop();
     });
@@ -135,10 +136,11 @@ setInterval(function () {
 var a = 0;
 function game_loop() {
     var start_time = new Date().getTime();
+    update_physics();
     var vel_iterations = 6;
     var pos_iterations = 2;
     world.Step(time_step, vel_iterations, pos_iterations);
-    var v = ground_body.GetLinearVelocity();
+    var v = box1.body.GetLinearVelocity();
     if (keys_down[37]) {
         v.x -= .4;
     }
@@ -155,29 +157,8 @@ function game_loop() {
     v.x = Math.min(v.x, 10) * .99;
     v.y = Math.max(v.y, -10) * .99;
     v.y = Math.min(v.y, 10) * .99;
-    graphics.clear();
-    physics_debug_draw(ground_body, bunny.width, bunny.height);
-    physics_debug_draw(ground_body2, bunny.width, bunny.height);
-    physics_debug_draw(body, renderer.width / 2.0, 40);
+    update_physics();
     ++a;
-    var mesh = terrain_container.terrain_list[1].fill_mesh;
-    var vertices = mesh.get_static_vertices();
-    var indices = mesh.get_static_indices();
-    var s = 20.0;
-    for (var n = 0; n < indices.length; ++n) {
-        var i = Number(indices[n]) * 2;
-        if (n % 3 == 0) {
-            graphics.moveTo(Number(vertices[i]) * s, Number(vertices[i + 1]) * s);
-        }
-        else {
-            graphics.lineTo(Number(vertices[i]) * s, Number(vertices[i + 1]) * s);
-        }
-        if (n % 3 == 2) {
-            i = Number(indices[n - 2]) * 2;
-            graphics.lineTo(Number(vertices[i]) * s, Number(vertices[i + 1]) * s);
-        }
-    }
-    graphics.endFill();
     game_layer.scale.x -= (game_layer.scale.x - dest_scale) / 4.0;
     game_layer.scale.y -= (game_layer.scale.y - dest_scale) / 4.0;
     ui_layer.scale = game_layer.scale;
