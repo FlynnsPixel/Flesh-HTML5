@@ -17,6 +17,7 @@ var PhysicsBodyType;
 var PhysicsObject = (function () {
     function PhysicsObject(type) {
         this.is_debug_drawing = true;
+        this.physics_origin = new b2Math.b2Vec2(0, 0);
         this.origin = new b2Math.b2Vec2(0, 0);
         if (type)
             this.body_type = type;
@@ -35,13 +36,15 @@ var PhysicsObject = (function () {
         var h = (height * B2_METERS) / 2.0;
         if (!origin) {
             origin = new b2Math.b2Vec2(0, 0);
-            this.origin = origin;
+            this.physics_origin = origin;
+            this.origin = new b2Math.b2Vec2(width / 2.0, height / 2.0);
         }
         else {
+            this.origin = origin.Copy();
             origin.x *= B2_METERS;
             origin.y *= B2_METERS;
-            this.origin.x = (w - origin.x) * 2.0;
-            this.origin.y = (h - origin.y) * 2.0;
+            this.physics_origin.x = (w - origin.x) * 2.0;
+            this.physics_origin.y = (h - origin.y) * 2.0;
             origin.x = w - origin.x;
             origin.y = h - origin.y;
         }
@@ -100,12 +103,13 @@ var PhysicsObject = (function () {
         this.set_pos(this.body.GetPosition().x, y);
     };
     PhysicsObject.prototype.set_sprite_pos = function (sprite) {
-        sprite.x = this.body.GetPosition().x / B2_METERS;
-        sprite.y = this.body.GetPosition().y / B2_METERS;
+        sprite.x = (this.body.GetPosition().x / B2_METERS);
+        sprite.y = (this.body.GetPosition().y / B2_METERS);
         sprite.rotation = this.body.GetAngle();
-        sprite.pivot.x = (sprite.width / 2.0);
-        sprite.pivot.y = (sprite.height / 2.0);
+        sprite.anchor.x = this.origin.x / sprite.width;
+        sprite.anchor.y = this.origin.y / sprite.height;
     };
+    PhysicsObject.prototype.get_physics_origin = function () { return this.physics_origin; };
     PhysicsObject.prototype.get_origin = function () { return this.origin; };
     PhysicsObject.prototype.remove = function () {
     };
@@ -153,7 +157,7 @@ var PhysicsDebug = (function () {
                     var x = pos.x / B2_METERS, y = pos.y / B2_METERS;
                     var w = this.parent.aabb.upperBound.x / B2_METERS;
                     var h = this.parent.aabb.upperBound.y / B2_METERS;
-                    var origin_x = this.parent.get_origin().x / B2_METERS;
+                    var origin_x = this.parent.get_physics_origin().x / B2_METERS;
                     for (var n = 0; n < verts.length; ++n) {
                         var vx = (verts[n].x / B2_METERS);
                         var vy = (verts[n].y / B2_METERS);
