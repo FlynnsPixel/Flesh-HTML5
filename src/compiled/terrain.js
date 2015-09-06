@@ -63,6 +63,7 @@ var Terrain = (function () {
     function Terrain(parent_obj, json_obj) {
         this.parent = parent_obj;
         this.container = new PIXI.Container();
+        this.collider_points = json_obj.collider_points;
         this.fill_mesh = new TerrainMesh(this, json_obj, TerrainGeometryType.FILL);
         this.edges_mesh = new TerrainMesh(this, json_obj, TerrainGeometryType.EDGES);
     }

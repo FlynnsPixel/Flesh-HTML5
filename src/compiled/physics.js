@@ -40,6 +40,26 @@ var PhysicsObject = (function () {
         this.fixture = this.body.GetFixtureList();
         this.calculate_aabb();
     };
+    PhysicsObject.prototype.create_edges = function (points) {
+        var scale = 20.0;
+        this.is_debug_drawing = true;
+        var count = 0;
+        for (var n = 0; n < points.length; n += 2) {
+            if (n + 3 >= points.length)
+                break;
+            var edge_shape = new b2Shapes.b2PolygonShape();
+            edge_shape.SetAsEdge(new b2Math.b2Vec2((points[n] * scale) * B2_METERS, (points[n + 1] * scale * B2_METERS)), new b2Math.b2Vec2((points[n + 2] * scale) * B2_METERS, (points[n + 3] * scale * B2_METERS)));
+            var fixture_def = new b2Dynamics.b2FixtureDef();
+            fixture_def.shape = edge_shape;
+            if (n == 0)
+                this.shape = edge_shape;
+            this.body.CreateFixture(fixture_def);
+            ++count;
+        }
+        console.log("generated " + count + " edge polys");
+        this.fixture = this.body.GetFixtureList();
+        this.calculate_aabb();
+    };
     PhysicsObject.prototype.calculate_aabb = function () {
         this.aabb.lowerBound = new b2Math.b2Vec2(10000, 10000);
         this.aabb.upperBound = new b2Math.b2Vec2(-10000, -10000);
@@ -71,11 +91,18 @@ var PhysicsObject = (function () {
     return PhysicsObject;
 })();
 ;
+var PhysicsDebugDrawType;
+(function (PhysicsDebugDrawType) {
+    PhysicsDebugDrawType[PhysicsDebugDrawType["UNKNOWN"] = 0] = "UNKNOWN";
+    PhysicsDebugDrawType[PhysicsDebugDrawType["BOX"] = 1] = "BOX";
+    PhysicsDebugDrawType[PhysicsDebugDrawType["EDGE"] = 2] = "EDGE";
+})(PhysicsDebugDrawType || (PhysicsDebugDrawType = {}));
+;
 var PhysicsDebug = (function () {
     function PhysicsDebug(parent) {
         this.parent = parent;
         this.graphics = new PIXI.Graphics();
-        ui_layer.addChild(this.graphics);
+        game_layer.addChild(this.graphics);
     }
     PhysicsDebug.prototype.draw = function () {
         this.graphics.clear();
@@ -84,19 +111,48 @@ var PhysicsDebug = (function () {
         this.graphics.lineStyle(1, 0x000000, .4);
         var pos = this.parent.body.GetPosition();
         var angle = this.parent.body.GetAngle();
-        var origin_x = 0;
-        var origin_y = 0;
-        var c = Math.cos(angle);
-        var s = Math.sin(angle);
-        var x = pos.x / B2_METERS;
-        var y = pos.y / B2_METERS;
-        var w = this.parent.aabb.upperBound.x / B2_METERS;
-        var h = this.parent.aabb.upperBound.y / B2_METERS;
-        this.graphics.moveTo(x, y);
-        this.graphics.lineTo(x + (c * w), y + (s * w));
-        this.graphics.lineTo(x + ((c * w) - (s * h)), y + ((s * w) + (c * h)));
-        this.graphics.lineTo(x - (s * h), y + (c * h));
-        this.graphics.endFill();
+        var fixture = this.parent.body.GetFixtureList();
+        while (fixture) {
+            var shape = fixture.GetShape();
+            var verts = shape.GetVertices();
+            var draw_type = PhysicsDebugDrawType.UNKNOWN;
+            if (verts.length == 2) {
+                draw_type = PhysicsDebugDrawType.EDGE;
+                this.graphics.lineStyle(10, 0x000000, 1);
+            }
+            else if (verts.length == 4) {
+                draw_type = PhysicsDebugDrawType.BOX;
+                this.graphics.beginFill(0x00ff00);
+                this.graphics.fillAlpha = .4;
+                this.graphics.lineStyle(1, 0x000000, .4);
+            }
+            switch (draw_type) {
+                case PhysicsDebugDrawType.BOX:
+                    var c = Math.cos(angle), s = Math.sin(angle);
+                    var x = pos.x / B2_METERS, y = pos.y / B2_METERS;
+                    var w = this.parent.aabb.upperBound.x / B2_METERS;
+                    var h = this.parent.aabb.upperBound.y / B2_METERS;
+                    this.graphics.moveTo(x, y);
+                    this.graphics.lineTo(x + (c * w), y + (s * w));
+                    this.graphics.lineTo(x + ((c * w) - (s * h)), y + ((s * w) + (c * h)));
+                    this.graphics.lineTo(x - (s * h), y + (c * h));
+                    break;
+                case PhysicsDebugDrawType.EDGE:
+                    for (var n = 0; n < verts.length; ++n) {
+                        var x = (verts[n].x + pos.x) / B2_METERS;
+                        var y = (verts[n].y + pos.y) / B2_METERS;
+                        if (n == 0) {
+                            this.graphics.moveTo(x, y);
+                        }
+                        else if (n == 1) {
+                            this.graphics.lineTo(x, y);
+                        }
+                    }
+                    break;
+            }
+            this.graphics.endFill();
+            fixture = fixture.GetNext();
+        }
     };
     return PhysicsDebug;
 })();

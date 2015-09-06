@@ -15,6 +15,7 @@ var bunny: PIXI.Sprite;
 var ground: PhysicsObject;
 var box1: PhysicsObject;
 var box2: PhysicsObject;
+var edges: PhysicsObject;
 
 var keys_down: boolean[] = [];
 
@@ -71,7 +72,7 @@ window.onload = function() {
 
 		ground = new PhysicsObject();
 		ground.create_box(400, 40);
-		ground.set_pos(0, 400);
+		ground.set_pos(0 + game_layer.pivot.x - game_layer.x, 400 + game_layer.pivot.y - game_layer.y);
 
 		box1 = new PhysicsObject(PhysicsBodyType.DYNAMIC);
 		box1.create_box(bunny.width, bunny.height);
@@ -79,7 +80,7 @@ window.onload = function() {
 		box1.fixture.SetFriction(.5);
 		box1.fixture.SetRestitution(.4);
 		box1.body.ResetMassData();
-		box1.set_x(400);
+		box1.set_pos(400 + game_layer.pivot.x - game_layer.x, game_layer.pivot.y - game_layer.y);
 
 		box2 = new PhysicsObject(PhysicsBodyType.DYNAMIC);
 		box2.create_box(bunny.width, bunny.height);
@@ -87,7 +88,11 @@ window.onload = function() {
 		box2.fixture.SetFriction(.5);
 		box2.fixture.SetRestitution(.4);
 		box2.body.ResetMassData();
-		box2.set_x(250);
+		box2.set_pos(250 + game_layer.pivot.x - game_layer.x, game_layer.pivot.y - game_layer.y);
+
+		edges = new PhysicsObject(PhysicsBodyType.STATIC);
+		edges.create_edges(terrain_container.terrain_list[0].collider_points);
+		edges.set_pos(game_layer.pivot.x - game_layer.x, game_layer.pivot.y - game_layer.y);
 
 		game_loop();
 	});
@@ -102,7 +107,7 @@ function on_key_down(e) {
 		dest_scale -= .1;
 	}
 
-	dest_scale = (dest_scale < .5 ) ? .5 : dest_scale;
+	dest_scale = (dest_scale < .1 ) ? .1 : dest_scale;
 	dest_scale = (dest_scale > 2) ? 2 : dest_scale;
 
 	keys_down[e.keyCode] = true;
@@ -158,7 +163,6 @@ function game_loop() {
 	v.y = Math.max(v.y, -10) * .99;
 	v.y = Math.min(v.y, 10) * .99;
 
-	console.log(box1.body.GetAngle());
 	update_physics();
 
 	++a;

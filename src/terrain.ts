@@ -81,11 +81,13 @@ class Terrain {
 	edges_mesh: TerrainMesh;
 	container: PIXI.Container;
 	parent: TerrainContainer;
+	collider_points: number[];
 
 	public constructor(parent_obj: TerrainContainer, json_obj) {
 		this.parent = parent_obj;
 		this.container = new PIXI.Container();
 
+		this.collider_points = json_obj.collider_points;
 		this.fill_mesh = new TerrainMesh(this, json_obj, TerrainGeometryType.FILL);
 		this.edges_mesh = new TerrainMesh(this, json_obj, TerrainGeometryType.EDGES);
 	}
