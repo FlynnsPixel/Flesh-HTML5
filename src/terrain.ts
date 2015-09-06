@@ -44,8 +44,7 @@ class TerrainMesh {
 		for (var n = 0; n < vertices.length; ++n) {
 		  vertices[n] = json_obj.vertex_data[n];
 			//flip all y vertices because of renderer coord system
-			if (n % 2 == 1) vertices[n] = -vertices[n] - json_obj.pos[1];
-			else vertices[n] = vertices[n] + json_obj.pos[0];
+			if (n % 2 == 1) vertices[n] = -vertices[n];
 			this.dynamic_vertices[n] = vertices[n];
 		}
 
@@ -66,6 +65,8 @@ class TerrainMesh {
 		}
 
 		this.mesh = new PIXI.mesh.Mesh(this.tex, vertices, uvs, indices, PIXI.mesh.Mesh.DRAW_MODES.TRIANGLES);
+		this.mesh.x = this.parent.pos.x;
+		this.mesh.y = this.parent.pos.y;
 		this.parent.container.addChild(this.mesh);
 	}
 
@@ -82,12 +83,20 @@ class Terrain {
 	container: PIXI.Container;
 	parent: TerrainContainer;
 	collider_points: number[];
+	pos: PIXI.Point = new PIXI.Point(0, 0);
 
 	public constructor(parent_obj: TerrainContainer, json_obj) {
 		this.parent = parent_obj;
 		this.container = new PIXI.Container();
+		this.pos.x = json_obj.pos[0];
+		this.pos.y = -json_obj.pos[1];
 
 		this.collider_points = json_obj.collider_points;
+		//flip collider y points due to renderer coord system
+		for (var n = 1; n < this.collider_points.length; n += 2) {
+			this.collider_points[n] = -this.collider_points[n];
+		}
+
 		this.fill_mesh = new TerrainMesh(this, json_obj, TerrainGeometryType.FILL);
 		this.edges_mesh = new TerrainMesh(this, json_obj, TerrainGeometryType.EDGES);
 	}
@@ -118,11 +127,14 @@ class TerrainContainer {
 			var terrain = new Terrain(this, terrain_obj);
 			this.container.addChild(terrain.container);
 			this.terrain_list.push(terrain);
+		}
+
+		this.container.scale.x *= this.scale;
+		this.container.scale.y *= this.scale;
+		var bounds = this.container.getBounds();
+		bounds.x *= this.scale; bounds.y *= this.scale;
+		bounds.width *= this.scale; bounds.height *= this.scale;
 	}
 
-	this.container.scale.x *= this.scale;
-	this.container.scale.y *= this.scale;
-	var bounds = this.container.getBounds();
-	bounds.x *= this.scale; bounds.y *= this.scale;
-	bounds.width *= this.scale; bounds.height *= this.scale;
+	get_scale(): number { return this.scale; }
 };

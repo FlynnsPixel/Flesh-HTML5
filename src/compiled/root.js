@@ -60,7 +60,7 @@ window.onload = function () {
         box1 = new PhysicsObject(PhysicsBodyType.DYNAMIC);
         box1.create_box(bunny.width, bunny.height);
         box1.fixture.SetDensity(.5);
-        box1.fixture.SetFriction(.5);
+        box1.fixture.SetFriction(40.0);
         box1.fixture.SetRestitution(.4);
         box1.body.ResetMassData();
         box1.set_pos(400 + game_layer.pivot.x - game_layer.x, game_layer.pivot.y - game_layer.y);
@@ -72,8 +72,9 @@ window.onload = function () {
         box2.body.ResetMassData();
         box2.set_pos(250 + game_layer.pivot.x - game_layer.x, game_layer.pivot.y - game_layer.y);
         edges = new PhysicsObject(PhysicsBodyType.STATIC);
-        edges.create_edges(terrain_container.terrain_list[0].collider_points);
-        edges.set_pos(game_layer.pivot.x - game_layer.x, game_layer.pivot.y - game_layer.y);
+        for (var n = 0; n < terrain_container.terrain_list.length; ++n) {
+            edges.create_edges(terrain_container.terrain_list[n].collider_points, terrain_container.get_scale(), terrain_container.terrain_list[n].pos);
+        }
         game_loop();
     });
 };
@@ -117,16 +118,16 @@ function game_loop() {
     update_physics();
     var v = box1.body.GetLinearVelocity();
     if (keys_down[37]) {
-        v.x -= .4;
+        v.x = -2;
     }
     else if (keys_down[39]) {
-        v.x += .4;
+        v.x = 2;
     }
     if (keys_down[38]) {
-        v.y -= .4;
+        v.y -= .2;
     }
     else if (keys_down[40]) {
-        v.y += .4;
+        v.y += .2;
     }
     v.x = Math.max(v.x, -10) * .99;
     v.x = Math.min(v.x, 10) * .99;

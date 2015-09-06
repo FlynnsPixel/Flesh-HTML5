@@ -55,15 +55,17 @@ class PhysicsObject {
     this.calculate_aabb();
   }
 
-  create_edges(points: number[]) {
-    var scale = 20.0;
+  create_edges(points: number[], scale?: number, pos_offset?: PIXI.Point) {
+    if (!scale) scale = 1;
+    if (!pos_offset) pos_offset = new PIXI.Point(0, 0);
+
     this.is_debug_drawing = true;
     var count = 0;
     for (var n = 0; n < points.length; n += 2) {
       if (n + 3 >= points.length) break;
       var edge_shape = new b2Shapes.b2PolygonShape();
-      edge_shape.SetAsEdge(new b2Math.b2Vec2((points[n] * scale) * B2_METERS, (points[n + 1] * scale * B2_METERS)),
-                           new b2Math.b2Vec2((points[n + 2] * scale) * B2_METERS, (points[n + 3] * scale * B2_METERS)));
+      edge_shape.SetAsEdge(new b2Math.b2Vec2(((points[n] + pos_offset.x) * scale) * B2_METERS, (((points[n + 1] + pos_offset.y) * scale) * B2_METERS)),
+                           new b2Math.b2Vec2(((points[n + 2] + pos_offset.x) * scale) * B2_METERS, (((points[n + 3] + pos_offset.y) * scale) * B2_METERS)));
       var fixture_def = new b2Dynamics.b2FixtureDef();
       fixture_def.shape = edge_shape;
       if (n == 0) this.shape = edge_shape;
