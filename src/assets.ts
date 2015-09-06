@@ -12,6 +12,8 @@ var init_assets_failed = false;
 var arr;
 
 function init_assets(callback) {
+	console.log("initialising assets...");
+
 	load_tex("assets/bunny2.png", 										function(tex) { texture_bunny = tex; });
 	load_tex("assets/forest_fill.png", 							function(tex) { texture_forest_fill = tex; });
 	load_tex("assets/forest_edges.png", 						function(tex) { texture_forest_edges = tex; });
@@ -19,6 +21,7 @@ function init_assets(callback) {
 	load_raw("assets/terrain4.txt", 									function(raw) { raw_terrain = raw; });
 
 	PIXI.loader.load(function(loader, resources) {
+		console.log("assets initialised");
 		callback();
 	});
 }

@@ -27,7 +27,6 @@ var game_layer: PIXI.Container;
 var ui_layer: PIXI.Container;
 var terrain_container: TerrainContainer;
 
-var world: b2Dynamics.b2World;
 var bunny: PIXI.Sprite;
 
 var body: b2Dynamics.b2Body;
@@ -83,9 +82,8 @@ window.onload = function() {
 	container = new PIXI.ParticleContainer(100000, [false, true, false, false, false]);
 	game_layer.addChild(container);
 
-	console.log("initialising assets...");
 	init_assets(function() {
-		console.log("assets initialised");
+		init_physics();
 
 		var terrain_arr = JSON.parse(raw_terrain).terrain;
 		terrain_container = new TerrainContainer(terrain_arr);
@@ -106,23 +104,7 @@ window.onload = function() {
 		bunny = new PIXI.Sprite(texture_bunny);
 		ui_layer.addChild(bunny);
 
-		world = new b2Dynamics.b2World(new b2Math.b2Vec2(0.0, 9.8), false);
-
-		var body_def = new b2Dynamics.b2BodyDef();
-		body_def.type = 0;
-		body_def.position.Set(0, 250.0 * B2_METERS);
-
-		body = world.CreateBody(body_def);
-		body.SetAngle(15 / (180 / Math.PI));
-
-		var box_shape = new b2Shapes.b2PolygonShape();
-		box_shape.SetAsOrientedBox((renderer.width / 2.0) * B2_METERS / 2.0, 40 * B2_METERS / 2.0, new b2Math.b2Vec2((renderer.width / 2.0) * B2_METERS / 2.0, 40 * B2_METERS / 2.0), 0);
-
-		var fixture = new b2Dynamics.b2FixtureDef();
-		fixture.shape = box_shape;
-		body.CreateFixture(fixture);
-
-
+		
 
 
 		var ground_body_def = new b2Dynamics.b2BodyDef();
@@ -218,10 +200,8 @@ function physics_debug_draw(body: b2Dynamics.b2Body, w: number, h: number) {
 	graphics.fillAlpha = .4;
 	graphics.lineStyle(1, 0x000000, .4);
 
-	var origin_x = w / 2.0;
-	var origin_y = h / 2.0;
-	origin_x = 0;
-	origin_y = 0;
+	var origin_x = 0;
+	var origin_y = 0;
 	var c = Math.cos(angle);
 	var s = Math.sin(angle);
 	var x = (pos.x / B2_METERS) + origin_x;
@@ -270,9 +250,7 @@ function game_loop() {
 	physics_debug_draw(body, renderer.width / 2.0, 40);
 
 	++a;
-	body.SetAngle(Math.cos(a / 40.0) / 2.0);
-
-	console.log(ground_body.GetPosition().y + ", " + body.GetPosition().y);
+	//body.SetAngle(Math.cos(a / 40.0) / 2.0);
 
 	/*
 	bunny.x = pos.x + (bunny.width / 2.0);
