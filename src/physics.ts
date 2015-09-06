@@ -47,9 +47,22 @@ class PhysicsObject {
     var box_shape = new b2Shapes.b2PolygonShape();
     var w = (width * B2_METERS) / 2.0;
     var h = (height * B2_METERS) / 2.0;
-    if (!origin) origin = new b2Math.b2Vec2(0, 0);
+
+    if (!origin) {
+      origin = new b2Math.b2Vec2(0, 0);
+      this.origin = origin;
+    }else {
+      origin.x *= B2_METERS;
+      origin.y *= B2_METERS;
+
+      this.origin.x = (w - origin.x) * 2.0;
+      this.origin.y = (h - origin.y) * 2.0;
+
+      origin.x = w - origin.x;
+      origin.y = h - origin.y;
+    }
+
 		box_shape.SetAsOrientedBox(w, h, origin, 0);
-    this.origin = origin;
 
     var fixture_def = new b2Dynamics.b2FixtureDef();
 		fixture_def.shape = box_shape;
@@ -111,11 +124,11 @@ class PhysicsObject {
   }
 
   set_sprite_pos(sprite: PIXI.Sprite) {
-  	bunny.x = this.body.GetPosition().x / B2_METERS;
-  	bunny.y = box1.body.GetPosition().y / B2_METERS;
-  	bunny.rotation = box1.body.GetAngle();
-  	bunny.pivot.x = bunny.width / 2.0;
-  	bunny.pivot.y = bunny.height / 2.0;
+    sprite.x = this.body.GetPosition().x / B2_METERS;
+  	sprite.y = this.body.GetPosition().y / B2_METERS;
+  	sprite.rotation = this.body.GetAngle();
+  	sprite.pivot.x = (sprite.width / 2.0);
+  	sprite.pivot.y = (sprite.height / 2.0);
   }
 
   get_origin(): b2Math.b2Vec2 { return this.origin; }
@@ -176,12 +189,13 @@ class PhysicsDebug {
       	var x = pos.x / B2_METERS, y = pos.y / B2_METERS;
         var w = this.parent.aabb.upperBound.x / B2_METERS;
         var h = this.parent.aabb.upperBound.y / B2_METERS;
+        var origin_x = this.parent.get_origin().x / B2_METERS;
 
         for (var n = 0; n < verts.length; ++n) {
           var vx = (verts[n].x / B2_METERS);
           var vy = (verts[n].y / B2_METERS);
-          var x = (pos.x / B2_METERS) - (c * (vx - this.parent.get_origin().x) + s * vy);
-          var y = (pos.y / B2_METERS) + (-s * (vx - this.parent.get_origin().x) + c * vy);
+          var x = (pos.x / B2_METERS) - (c * (vx - origin_x) + s * vy);
+          var y = (pos.y / B2_METERS) + (-s * (vx - origin_x) + c * vy);
           if (n == 0) this.graphics.moveTo(x, y);
         	if (n == 1) this.graphics.lineTo(x, y);
         	if (n == 2) this.graphics.lineTo(x, y);
