@@ -39,6 +39,11 @@ var PhysicsObject = (function () {
             fixture = fixture.GetNext();
         }
     };
+    PhysicsObject.prototype.update = function () {
+        if (this.is_debug_drawing) {
+            this.debug.draw();
+        }
+    };
     PhysicsObject.prototype.remove = function () {
     };
     return PhysicsObject;
@@ -61,8 +66,8 @@ var PhysicsDebug = (function () {
         var s = Math.sin(angle);
         var x = pos.x / B2_METERS;
         var y = pos.y / B2_METERS;
-        var w = this.parent.aabb.lowerBound;
-        var h = this.parent.aabb.upperBound;
+        var w = this.parent.aabb.upperBound.x;
+        var h = this.parent.aabb.upperBound.y;
         this.graphics.moveTo(x + ((c * origin_x) - (s * origin_y)), y + ((s * origin_x) + (c * origin_y)));
         this.graphics.lineTo(x + ((c * w) - (s * origin_y)), y + ((s * w) + (c * origin_y)));
         this.graphics.lineTo(x + ((c * w) - (s * h)), y + ((s * w) + (c * h)));
@@ -76,4 +81,9 @@ var B2_METERS = .01;
 var physics_objects = [];
 function init_physics() {
     world = new b2Dynamics.b2World(new b2Math.b2Vec2(0.0, 9.8), false);
+}
+function update_physics() {
+    for (var n = 0; n < physics_objects.length; ++n) {
+        physics_objects[n].update();
+    }
 }
