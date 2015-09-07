@@ -76,11 +76,11 @@ window.onload = function() {
 		ground.body.SetAngle(-55 / (180 / Math.PI));
 
 		box1 = new PhysicsObject(PhysicsBodyType.DYNAMIC);
-		box1.create_box(bunny.width, bunny.height);
-		//box1.create_circle(16);
-		box1.fixture.SetDensity(0.0);
-		box1.fixture.SetFriction(12.0);
-		box1.fixture.SetRestitution(0.0);
+		//box1.create_box(bunny.width, bunny.height);
+		box1.create_circle(16);
+		//box1.fixture.SetDensity(0.0);
+		//box1.fixture.SetFriction(12.0);
+		//box1.fixture.SetRestitution(0.0);
 		box1.body.ResetMassData();
 		box1.body.SetFixedRotation(true);
 		box1.set_pos(400 + game_layer.pivot.x - game_layer.x, 200 + game_layer.pivot.y - game_layer.y);
@@ -154,17 +154,21 @@ function game_loop() {
 	var v = box1.body.GetLinearVelocity();
 	var av = box1.body.GetAngularVelocity();
 	var inputting = false;
+	box1.fixture.SetFriction(12.0);
 	if (keys_down[37]) {
 		v.x = -2;
 		inputting = true;
 		a -= .25;
 		box1.body.SetAngle(a);
+		box1.fixture.SetFriction(0.0);
 	}else if (keys_down[39]) {
 		v.x = 2;
 		inputting = true;
 		a += .25;
 		box1.body.SetAngle(a);
+		box1.fixture.SetFriction(0.0);
 	}
+	box1.body.ResetMassData();
 
 	if (keys_down[38]) {
 		v.y -= 1;
