@@ -165,7 +165,6 @@ var PhysicsDebug = (function () {
                     draw_type = PhysicsDebugDrawType.POLY_BOX;
             }
             else if (shape_type == PhysicsShapeType.CIRCLE) {
-                console.log("circle!");
                 draw_type = PhysicsDebugDrawType.CIRCLE;
             }
             else {
@@ -179,8 +178,8 @@ var PhysicsDebug = (function () {
                     var c = Math.cos(angle), s = Math.sin(angle);
                     var origin_x = this.parent.get_physics_origin().x / B2_METERS;
                     for (var n = 0; n < verts.length; ++n) {
-                        var vx = (verts[n].x / B2_METERS);
-                        var vy = (verts[n].y / B2_METERS);
+                        var vx = verts[n].x / B2_METERS;
+                        var vy = verts[n].y / B2_METERS;
                         var x = (pos.x / B2_METERS) - (c * (vx - origin_x) + s * vy);
                         var y = (pos.y / B2_METERS) + (-s * (vx - origin_x) + c * vy);
                         if (n == 0)
@@ -191,9 +190,13 @@ var PhysicsDebug = (function () {
                     break;
                 case PhysicsDebugDrawType.POLY_EDGE:
                     this.graphics.lineStyle(4, 0x000000, 1);
+                    var c = Math.cos(angle), s = Math.sin(angle);
+                    var origin_x = 0;
                     for (var n = 0; n < verts.length; ++n) {
-                        var x = (verts[n].x + pos.x) / B2_METERS;
-                        var y = (verts[n].y + pos.y) / B2_METERS;
+                        var vx = verts[n].x / B2_METERS;
+                        var vy = verts[n].y / B2_METERS;
+                        var x = (pos.x / B2_METERS) + (c * (vx - origin_x) + s * vy);
+                        var y = (pos.y / B2_METERS) + (-s * (vx - origin_x) + c * vy);
                         if (n == 0) {
                             this.graphics.moveTo(x, y);
                         }
@@ -206,7 +209,6 @@ var PhysicsDebug = (function () {
                     var circle_shape = fixture.GetShape();
                     this.graphics.lineStyle(4, 0x000000, 1);
                     this.graphics.drawCircle(pos.x / B2_METERS, pos.y / B2_METERS, circle_shape.GetRadius() / B2_METERS);
-                    console.log(circle_shape.GetRadius() / B2_METERS);
                     break;
             }
             this.graphics.endFill();
@@ -225,7 +227,7 @@ function init_physics() {
     world = new b2Dynamics.b2World(new b2Math.b2Vec2(0.0, 9.8), false);
 }
 function update_physics() {
-    world.Step(1 / 120.0, vel_iterations, pos_iterations);
+    world.Step(time_step, vel_iterations, pos_iterations);
     for (var n = 0; n < physics_objects.length; ++n) {
         physics_objects[n].update();
     }

@@ -107,7 +107,7 @@ class PhysicsObject {
       this.body.CreateFixture(fixture_def);
     }
     this.fixture = this.body.GetFixtureList();
-
+    
     this.calculate_aabb();
   }
 
@@ -247,7 +247,6 @@ class PhysicsDebug {
         if (verts.length == 2) draw_type = PhysicsDebugDrawType.POLY_EDGE;
         else if (verts.length == 4) draw_type = PhysicsDebugDrawType.POLY_BOX;
       }else if (shape_type == PhysicsShapeType.CIRCLE) {
-        console.log("circle!");
         draw_type = PhysicsDebugDrawType.CIRCLE;
       }else {
         console.log("error in physics debug draw - unknown shape type " + shape_type);
@@ -264,8 +263,8 @@ class PhysicsDebug {
         var origin_x = this.parent.get_physics_origin().x / B2_METERS;
 
         for (var n = 0; n < verts.length; ++n) {
-          var vx = (verts[n].x / B2_METERS);
-          var vy = (verts[n].y / B2_METERS);
+          var vx = verts[n].x / B2_METERS;
+          var vy = verts[n].y / B2_METERS;
           var x = (pos.x / B2_METERS) - (c * (vx - origin_x) + s * vy);
           var y = (pos.y / B2_METERS) + (-s * (vx - origin_x) + c * vy);
           if (n == 0) this.graphics.moveTo(x, y);
@@ -276,9 +275,14 @@ class PhysicsDebug {
         //draws edges from shape vertices by drawing a line to each point
         this.graphics.lineStyle(4, 0x000000, 1);
 
+        var c = Math.cos(angle), s = Math.sin(angle);
+        var origin_x = 0;
+
         for (var n = 0; n < verts.length; ++n) {
-          var x = (verts[n].x + pos.x) / B2_METERS;
-          var y = (verts[n].y + pos.y) / B2_METERS;
+          var vx = verts[n].x / B2_METERS;
+          var vy = verts[n].y / B2_METERS;
+          var x = (pos.x / B2_METERS) + (c * (vx - origin_x) + s * vy);
+          var y = (pos.y / B2_METERS) + (-s * (vx - origin_x) + c * vy);
           if (n == 0) {
             this.graphics.moveTo(x, y);
           }else if (n == 1) {
@@ -292,7 +296,6 @@ class PhysicsDebug {
         //draws edges from shape vertices by drawing a line to each point
         this.graphics.lineStyle(4, 0x000000, 1);
         this.graphics.drawCircle(pos.x / B2_METERS, pos.y / B2_METERS, circle_shape.GetRadius() / B2_METERS);
-        console.log(circle_shape.GetRadius() / B2_METERS);
 
         break;
       }
@@ -316,7 +319,7 @@ function init_physics() {
 }
 
 function update_physics() {
-  world.Step(1 / 120.0, vel_iterations, pos_iterations);
+  world.Step(time_step, vel_iterations, pos_iterations);
 
   for (var n = 0; n < physics_objects.length; ++n) {
     physics_objects[n].update();
