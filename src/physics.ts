@@ -94,7 +94,6 @@ class PhysicsObject {
     if (!scale) scale = 1;
     if (!pos_offset) pos_offset = new PIXI.Point(0, 0);
 
-    this.is_debug_drawing = true;
     //loops through points array and creates an edge shape for every
     //2 points in the array
     for (var n = 0; n < points.length; n += 2) {
@@ -108,6 +107,23 @@ class PhysicsObject {
       this.body.CreateFixture(fixture_def);
     }
     this.fixture = this.body.GetFixtureList();
+
+    this.calculate_aabb();
+  }
+
+  /**
+  * creates a circle shape with a specified radius
+  **/
+  create_circle(radius: number) {
+    var circle_shape = new b2Shapes.b2CircleShape(radius * B2_METERS);
+    var fixture_def = new b2Dynamics.b2FixtureDef();
+    fixture_def.shape = circle_shape;
+    this.shape = circle_shape;
+    this.body.CreateFixture(fixture_def);
+    this.fixture = this.body.GetFixtureList();
+
+    this.origin.x = radius;
+    this.origin.y = radius;
 
     this.calculate_aabb();
   }
@@ -130,6 +146,7 @@ class PhysicsObject {
   **/
   update() {
     if (this.is_debug_drawing) {
+      this.debug.parent = this;
       this.debug.draw();
     }
   }
@@ -162,10 +179,10 @@ class PhysicsObject {
   * sets sprite pos, rotation, ect, equal to that of this physics body
   * useful for attaching sprites to physics objects
   **/
-  set_sprite_pos(sprite: PIXI.Sprite) {
+  set_sprite_pos(sprite: PIXI.Sprite, enable_rotation?: boolean) {
     sprite.x = (this.body.GetPosition().x / B2_METERS);
   	sprite.y = (this.body.GetPosition().y / B2_METERS);
-  	sprite.rotation = this.body.GetAngle();
+    if (enable_rotation == undefined || enable_rotation) sprite.rotation = this.body.GetAngle();
     sprite.anchor.x = this.origin.x / sprite.width;
     sprite.anchor.y = this.origin.y / sprite.height;
   }
@@ -181,8 +198,15 @@ class PhysicsObject {
 enum PhysicsDebugDrawType {
 
   UNKNOWN,
-  BOX,
-  EDGE
+  POLY_BOX,
+  POLY_EDGE,
+  CIRCLE
+};
+
+enum PhysicsShapeType {
+
+  CIRCLE,
+  POLYGON
 };
 
 class PhysicsDebug {
@@ -213,15 +237,24 @@ class PhysicsDebug {
     //loops through all fixtures of physics object body and draws them
     var fixture = this.parent.body.GetFixtureList();
     while (fixture) {
-      var shape = <b2Shapes.b2PolygonShape>fixture.GetShape();
-      var verts: b2Math.b2Vec2[] = shape.GetVertices();
-
       var draw_type = PhysicsDebugDrawType.UNKNOWN;
-      if (verts.length == 2) draw_type = PhysicsDebugDrawType.EDGE;
-      else if (verts.length == 4) draw_type = PhysicsDebugDrawType.BOX;
+      var shape_type = fixture.GetType();
+
+      //calculates draw type from the fixture shape and shape type
+      if (shape_type == PhysicsShapeType.POLYGON) {
+        var verts: b2Math.b2Vec2[] = (<b2Shapes.b2PolygonShape>fixture.GetShape()).GetVertices();
+
+        if (verts.length == 2) draw_type = PhysicsDebugDrawType.POLY_EDGE;
+        else if (verts.length == 4) draw_type = PhysicsDebugDrawType.POLY_BOX;
+      }else if (shape_type == PhysicsShapeType.CIRCLE) {
+        console.log("circle!");
+        draw_type = PhysicsDebugDrawType.CIRCLE;
+      }else {
+        console.log("error in physics debug draw - unknown shape type " + shape_type);
+      }
 
       switch (draw_type) {
-      case PhysicsDebugDrawType.BOX:
+      case PhysicsDebugDrawType.POLY_BOX:
         //draws a box from shape vertices and rotate it with it's origin point
         this.graphics.beginFill(0x00ff00);
         this.graphics.fillAlpha = .4;
@@ -239,7 +272,7 @@ class PhysicsDebug {
           else this.graphics.lineTo(x, y);
         }
         break;
-      case PhysicsDebugDrawType.EDGE:
+      case PhysicsDebugDrawType.POLY_EDGE:
         //draws edges from shape vertices by drawing a line to each point
         this.graphics.lineStyle(4, 0x000000, 1);
 
@@ -252,6 +285,15 @@ class PhysicsDebug {
             this.graphics.lineTo(x, y);
           }
         }
+        break;
+      case PhysicsDebugDrawType.CIRCLE:
+        var circle_shape = <b2Shapes.b2CircleShape>fixture.GetShape();
+
+        //draws edges from shape vertices by drawing a line to each point
+        this.graphics.lineStyle(4, 0x000000, 1);
+        this.graphics.drawCircle(pos.x / B2_METERS, pos.y / B2_METERS, circle_shape.GetRadius() / B2_METERS);
+        console.log(circle_shape.GetRadius() / B2_METERS);
+
         break;
       }
       this.graphics.endFill();

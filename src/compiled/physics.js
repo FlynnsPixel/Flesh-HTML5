@@ -61,7 +61,6 @@ var PhysicsObject = (function () {
             scale = 1;
         if (!pos_offset)
             pos_offset = new PIXI.Point(0, 0);
-        this.is_debug_drawing = true;
         for (var n = 0; n < points.length; n += 2) {
             if (n + 3 >= points.length)
                 break;
@@ -76,6 +75,17 @@ var PhysicsObject = (function () {
         this.fixture = this.body.GetFixtureList();
         this.calculate_aabb();
     };
+    PhysicsObject.prototype.create_circle = function (radius) {
+        var circle_shape = new b2Shapes.b2CircleShape(radius * B2_METERS);
+        var fixture_def = new b2Dynamics.b2FixtureDef();
+        fixture_def.shape = circle_shape;
+        this.shape = circle_shape;
+        this.body.CreateFixture(fixture_def);
+        this.fixture = this.body.GetFixtureList();
+        this.origin.x = radius;
+        this.origin.y = radius;
+        this.calculate_aabb();
+    };
     PhysicsObject.prototype.calculate_aabb = function () {
         this.aabb.lowerBound = new b2Math.b2Vec2(10000, 10000);
         this.aabb.upperBound = new b2Math.b2Vec2(-10000, -10000);
@@ -87,6 +97,7 @@ var PhysicsObject = (function () {
     };
     PhysicsObject.prototype.update = function () {
         if (this.is_debug_drawing) {
+            this.debug.parent = this;
             this.debug.draw();
         }
     };
@@ -102,10 +113,11 @@ var PhysicsObject = (function () {
     PhysicsObject.prototype.set_y = function (y) {
         this.set_pos(this.body.GetPosition().x, y);
     };
-    PhysicsObject.prototype.set_sprite_pos = function (sprite) {
+    PhysicsObject.prototype.set_sprite_pos = function (sprite, enable_rotation) {
         sprite.x = (this.body.GetPosition().x / B2_METERS);
         sprite.y = (this.body.GetPosition().y / B2_METERS);
-        sprite.rotation = this.body.GetAngle();
+        if (enable_rotation == undefined || enable_rotation)
+            sprite.rotation = this.body.GetAngle();
         sprite.anchor.x = this.origin.x / sprite.width;
         sprite.anchor.y = this.origin.y / sprite.height;
     };
@@ -119,9 +131,16 @@ var PhysicsObject = (function () {
 var PhysicsDebugDrawType;
 (function (PhysicsDebugDrawType) {
     PhysicsDebugDrawType[PhysicsDebugDrawType["UNKNOWN"] = 0] = "UNKNOWN";
-    PhysicsDebugDrawType[PhysicsDebugDrawType["BOX"] = 1] = "BOX";
-    PhysicsDebugDrawType[PhysicsDebugDrawType["EDGE"] = 2] = "EDGE";
+    PhysicsDebugDrawType[PhysicsDebugDrawType["POLY_BOX"] = 1] = "POLY_BOX";
+    PhysicsDebugDrawType[PhysicsDebugDrawType["POLY_EDGE"] = 2] = "POLY_EDGE";
+    PhysicsDebugDrawType[PhysicsDebugDrawType["CIRCLE"] = 3] = "CIRCLE";
 })(PhysicsDebugDrawType || (PhysicsDebugDrawType = {}));
+;
+var PhysicsShapeType;
+(function (PhysicsShapeType) {
+    PhysicsShapeType[PhysicsShapeType["CIRCLE"] = 0] = "CIRCLE";
+    PhysicsShapeType[PhysicsShapeType["POLYGON"] = 1] = "POLYGON";
+})(PhysicsShapeType || (PhysicsShapeType = {}));
 ;
 var PhysicsDebug = (function () {
     function PhysicsDebug(parent) {
@@ -136,15 +155,24 @@ var PhysicsDebug = (function () {
         var angle = this.parent.body.GetAngle();
         var fixture = this.parent.body.GetFixtureList();
         while (fixture) {
-            var shape = fixture.GetShape();
-            var verts = shape.GetVertices();
             var draw_type = PhysicsDebugDrawType.UNKNOWN;
-            if (verts.length == 2)
-                draw_type = PhysicsDebugDrawType.EDGE;
-            else if (verts.length == 4)
-                draw_type = PhysicsDebugDrawType.BOX;
+            var shape_type = fixture.GetType();
+            if (shape_type == PhysicsShapeType.POLYGON) {
+                var verts = fixture.GetShape().GetVertices();
+                if (verts.length == 2)
+                    draw_type = PhysicsDebugDrawType.POLY_EDGE;
+                else if (verts.length == 4)
+                    draw_type = PhysicsDebugDrawType.POLY_BOX;
+            }
+            else if (shape_type == PhysicsShapeType.CIRCLE) {
+                console.log("circle!");
+                draw_type = PhysicsDebugDrawType.CIRCLE;
+            }
+            else {
+                console.log("error in physics debug draw - unknown shape type " + shape_type);
+            }
             switch (draw_type) {
-                case PhysicsDebugDrawType.BOX:
+                case PhysicsDebugDrawType.POLY_BOX:
                     this.graphics.beginFill(0x00ff00);
                     this.graphics.fillAlpha = .4;
                     this.graphics.lineStyle(1, 0x000000, .4);
@@ -161,7 +189,7 @@ var PhysicsDebug = (function () {
                             this.graphics.lineTo(x, y);
                     }
                     break;
-                case PhysicsDebugDrawType.EDGE:
+                case PhysicsDebugDrawType.POLY_EDGE:
                     this.graphics.lineStyle(4, 0x000000, 1);
                     for (var n = 0; n < verts.length; ++n) {
                         var x = (verts[n].x + pos.x) / B2_METERS;
@@ -173,6 +201,12 @@ var PhysicsDebug = (function () {
                             this.graphics.lineTo(x, y);
                         }
                     }
+                    break;
+                case PhysicsDebugDrawType.CIRCLE:
+                    var circle_shape = fixture.GetShape();
+                    this.graphics.lineStyle(4, 0x000000, 1);
+                    this.graphics.drawCircle(pos.x / B2_METERS, pos.y / B2_METERS, circle_shape.GetRadius() / B2_METERS);
+                    console.log(circle_shape.GetRadius() / B2_METERS);
                     break;
             }
             this.graphics.endFill();

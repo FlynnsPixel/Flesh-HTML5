@@ -57,14 +57,14 @@ window.onload = function () {
         ground = new PhysicsObject();
         ground.create_box(40, 400);
         ground.set_pos(0 + game_layer.pivot.x - game_layer.x, 400 + game_layer.pivot.y - game_layer.y);
-        ground.body.SetAngle(-45 / (180 / Math.PI));
+        ground.body.SetAngle(-55 / (180 / Math.PI));
         box1 = new PhysicsObject(PhysicsBodyType.DYNAMIC);
-        box1.create_box(bunny.width, bunny.height, new b2Math.b2Vec2(bunny.width / 2.0, bunny.height / 2.0));
+        box1.create_circle(16);
         box1.fixture.SetDensity(.5);
         box1.fixture.SetFriction(40.0);
-        box1.fixture.SetRestitution(.4);
+        box1.fixture.SetRestitution(0);
         box1.body.ResetMassData();
-        box1.set_pos(400 + game_layer.pivot.x - game_layer.x, game_layer.pivot.y - game_layer.y);
+        box1.set_pos(400 + game_layer.pivot.x - game_layer.x, 200 + game_layer.pivot.y - game_layer.y);
         box2 = new PhysicsObject(PhysicsBodyType.DYNAMIC);
         box2.create_box(bunny.width, bunny.height);
         box2.fixture.SetDensity(.5);
