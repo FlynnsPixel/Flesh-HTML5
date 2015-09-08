@@ -84,6 +84,10 @@ class TerrainMesh {
 		this.parent.container.addChild(this.mesh);
 	}
 
+	/**
+	* draws this mesh in the debug layer, line by line
+	* warning: is really slow, should be used carefully
+	**/
 	debug_draw() {
 		var vertices = this.static_vertices;
 		var indices = this.static_indices;
@@ -151,6 +155,10 @@ class Terrain {
 		debug_layer.addChild(this.graphics);
 	}
 
+	/**
+	* draws the fill mesh and edge mesh of this terrain object in the debug layer
+	* warning: is really slow, should be used carefully
+	**/
 	debug_draw() {
 		this.graphics.clear();
 		this.graphics.lineStyle(1, 0x0000ff, 1);
@@ -193,6 +201,10 @@ class TerrainContainer {
 		bounds.width *= this.scale; bounds.height *= this.scale;
 	}
 
+	/**
+	* draws all terrain object meshes to the debug layer
+	* warning: is really slow, should be used carefully
+	**/
 	debug_draw_all() {
 		for (var n = 0; n < this.terrain_list.length; ++n) {
 			this.terrain_list[n].debug_draw();

@@ -135,15 +135,15 @@ function game_loop() {
 	var v = box1.body.GetLinearVelocity();
 	var av = box1.body.GetAngularVelocity();
 	var inputting = false;
-	box1.fixture.SetFriction(12.0);
+	box1.fixture.SetFriction(120.0);
 	if (is_key_down(KeyCode.LEFT_ARROW)) {
 		v.x = -2;
 		inputting = true;
-		box1.fixture.SetFriction(0.0);
+		box1.fixture.SetFriction(.1);
 	}else if (is_key_down(KeyCode.RIGHT_ARROW)) {
 		v.x = 2;
 		inputting = true;
-		box1.fixture.SetFriction(0.0);
+		box1.fixture.SetFriction(.1);
 	}
 	box1.body.ResetMassData();
 

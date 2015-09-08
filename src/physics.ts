@@ -145,7 +145,7 @@ class PhysicsObject {
   * updates debug drawing and more
   **/
   update() {
-    if (this.is_debug_drawing) {
+    if (this.is_debug_drawing && is_physics_debug_drawing) {
       this.debug.parent = this;
       this.debug.draw();
     }
@@ -311,6 +311,7 @@ class PhysicsDebug {
 var world: b2Dynamics.b2World;
 var B2_METERS = .01;
 var physics_objects: PhysicsObject[] = [];
+var is_physics_debug_drawing = false;
 
 //only for collision, the higher the value, the better collision
 //accuracy at the cost of performance
@@ -322,6 +323,17 @@ function init_physics() {
 }
 
 function update_physics() {
+  //toggles debug drawing and clears all physics objects
+  //debug graphics when debug drawing is off
+  if (is_key_down(KeyCode.CTRL) && is_key_pressed(KeyCode.Q)) {
+    is_physics_debug_drawing = !is_physics_debug_drawing;
+    if (!is_physics_debug_drawing) {
+      for (var n = 0; n < physics_objects.length; ++n) {
+        physics_objects[n].debug.graphics.clear();
+      }
+    }
+  }
+
   world.Step(time_step, vel_iterations, pos_iterations);
 
   for (var n = 0; n < physics_objects.length; ++n) {

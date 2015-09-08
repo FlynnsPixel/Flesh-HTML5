@@ -96,7 +96,7 @@ var PhysicsObject = (function () {
         }
     };
     PhysicsObject.prototype.update = function () {
-        if (this.is_debug_drawing) {
+        if (this.is_debug_drawing && is_physics_debug_drawing) {
             this.debug.parent = this;
             this.debug.draw();
         }
@@ -223,12 +223,21 @@ var PhysicsDebug = (function () {
 var world;
 var B2_METERS = .01;
 var physics_objects = [];
+var is_physics_debug_drawing = false;
 var vel_iterations = 6;
 var pos_iterations = 2;
 function init_physics() {
     world = new b2Dynamics.b2World(new b2Math.b2Vec2(0.0, 9.8), false);
 }
 function update_physics() {
+    if (is_key_down(KeyCode.CTRL) && is_key_pressed(KeyCode.Q)) {
+        is_physics_debug_drawing = !is_physics_debug_drawing;
+        if (!is_physics_debug_drawing) {
+            for (var n = 0; n < physics_objects.length; ++n) {
+                physics_objects[n].debug.graphics.clear();
+            }
+        }
+    }
     world.Step(time_step, vel_iterations, pos_iterations);
     for (var n = 0; n < physics_objects.length; ++n) {
         physics_objects[n].update();
