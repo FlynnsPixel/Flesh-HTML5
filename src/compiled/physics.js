@@ -147,7 +147,7 @@ var PhysicsDebug = (function () {
         this.draw;
         this.parent = parent;
         this.graphics = new PIXI.Graphics();
-        game_layer.addChild(this.graphics);
+        debug_layer.addChild(this.graphics);
     }
     PhysicsDebug.prototype.draw = function () {
         this.graphics.clear();
@@ -207,7 +207,9 @@ var PhysicsDebug = (function () {
                     break;
                 case PhysicsDebugDrawType.CIRCLE:
                     var circle_shape = fixture.GetShape();
-                    this.graphics.lineStyle(4, 0x000000, 1);
+                    this.graphics.beginFill(0x00ff00);
+                    this.graphics.fillAlpha = .4;
+                    this.graphics.lineStyle(1, 0x000000, .4);
                     this.graphics.drawCircle(pos.x / B2_METERS, pos.y / B2_METERS, circle_shape.GetRadius() / B2_METERS);
                     break;
             }

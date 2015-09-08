@@ -7,6 +7,7 @@ var container: PIXI.ParticleContainer;
 var is_adding: boolean;
 var dest_scale: number = 1;
 var game_layer: PIXI.Container;
+var debug_layer: PIXI.Container;
 var ui_layer: PIXI.Container;
 var terrain_container: TerrainContainer;
 
@@ -37,8 +38,10 @@ window.onload = function() {
 
 	stage = new PIXI.Container();
 	game_layer = new PIXI.Container();
+	debug_layer = new PIXI.Container();
 	ui_layer = new PIXI.Container();
 	stage.addChild(game_layer);
+	stage.addChild(debug_layer);
 	stage.addChild(ui_layer);
 
 	resize_canvas();
@@ -57,6 +60,10 @@ window.onload = function() {
 		game_layer.y = renderer.height / 2.0;
 		game_layer.pivot.x = game_layer.width / 2.0;
 		game_layer.pivot.y = game_layer.height / 2.0;
+		debug_layer.x = game_layer.x;
+		debug_layer.y = game_layer.y;
+		debug_layer.pivot.x = game_layer.pivot.x;
+		debug_layer.pivot.y = game_layer.pivot.y;
 
 		bunny = new PIXI.Sprite(texture_bunny);
 		game_layer.addChild(bunny);
@@ -125,10 +132,6 @@ function game_loop() {
 
 	var start_time = new Date().getTime();
 
-	if (is_mouse_button_pressed(MouseButtonID.MIDDLE)) {
-		console.log("down");
-	}
-
 	var v = box1.body.GetLinearVelocity();
 	var av = box1.body.GetAngularVelocity();
 	var inputting = false;
@@ -151,29 +154,9 @@ function game_loop() {
 
 	box1.set_sprite_pos(bunny, false);
 
-	/*
-	var mesh = terrain_container.terrain_list[1].fill_mesh;
-	var vertices = mesh.get_static_vertices();
-	var indices = mesh.get_static_indices();
-	var s = 20.0;
-	for (var n = 0; n < indices.length; ++n) {
-		var i = Number(indices[n]) * 2;
-		if (n % 3 == 0) {
-			graphics.moveTo(Number(vertices[i]) * s, Number(vertices[i + 1]) * s);
-		}else {
-			graphics.lineTo(Number(vertices[i]) * s, Number(vertices[i + 1]) * s);
-		}
-		if (n % 3 == 2) {
-			i = Number(indices[n - 2]) * 2;
-			graphics.lineTo(Number(vertices[i]) * s, Number(vertices[i + 1]) * s);
-		}
-	}
-	graphics.endFill();
-	*/
-
 	game_layer.scale.x -= (game_layer.scale.x - dest_scale) / 4.0;
 	game_layer.scale.y -= (game_layer.scale.y - dest_scale) / 4.0;
-	ui_layer.scale = game_layer.scale;
+	debug_layer.scale = game_layer.scale;
 
 	renderer.render(stage);
 

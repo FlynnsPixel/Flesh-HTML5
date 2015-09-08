@@ -107,7 +107,7 @@ class PhysicsObject {
       this.body.CreateFixture(fixture_def);
     }
     this.fixture = this.body.GetFixtureList();
-    
+
     this.calculate_aabb();
   }
 
@@ -222,7 +222,7 @@ class PhysicsDebug {
     this.parent = parent;
 
     this.graphics = new PIXI.Graphics();
-    game_layer.addChild(this.graphics);
+    debug_layer.addChild(this.graphics);
   }
 
   /**
@@ -294,7 +294,10 @@ class PhysicsDebug {
         var circle_shape = <b2Shapes.b2CircleShape>fixture.GetShape();
 
         //draws edges from shape vertices by drawing a line to each point
-        this.graphics.lineStyle(4, 0x000000, 1);
+        this.graphics.beginFill(0x00ff00);
+        this.graphics.fillAlpha = .4;
+        this.graphics.lineStyle(1, 0x000000, .4);
+
         this.graphics.drawCircle(pos.x / B2_METERS, pos.y / B2_METERS, circle_shape.GetRadius() / B2_METERS);
 
         break;

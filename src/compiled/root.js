@@ -6,6 +6,7 @@ var container;
 var is_adding;
 var dest_scale = 1;
 var game_layer;
+var debug_layer;
 var ui_layer;
 var terrain_container;
 var bunny;
@@ -30,8 +31,10 @@ window.onload = function () {
     document.body.appendChild(renderer.view);
     stage = new PIXI.Container();
     game_layer = new PIXI.Container();
+    debug_layer = new PIXI.Container();
     ui_layer = new PIXI.Container();
     stage.addChild(game_layer);
+    stage.addChild(debug_layer);
     stage.addChild(ui_layer);
     resize_canvas();
     container = new PIXI.ParticleContainer(100000, [false, true, false, false, false]);
@@ -46,6 +49,10 @@ window.onload = function () {
         game_layer.y = renderer.height / 2.0;
         game_layer.pivot.x = game_layer.width / 2.0;
         game_layer.pivot.y = game_layer.height / 2.0;
+        debug_layer.x = game_layer.x;
+        debug_layer.y = game_layer.y;
+        debug_layer.pivot.x = game_layer.pivot.x;
+        debug_layer.pivot.y = game_layer.pivot.y;
         bunny = new PIXI.Sprite(texture_bunny);
         game_layer.addChild(bunny);
         ground = new PhysicsObject();
@@ -102,9 +109,6 @@ function game_loop() {
         box1.body.SetLinearVelocity(v);
     }
     var start_time = new Date().getTime();
-    if (is_mouse_button_pressed(MouseButtonID.MIDDLE)) {
-        console.log("down");
-    }
     var v = box1.body.GetLinearVelocity();
     var av = box1.body.GetAngularVelocity();
     var inputting = false;
@@ -127,7 +131,7 @@ function game_loop() {
     box1.set_sprite_pos(bunny, false);
     game_layer.scale.x -= (game_layer.scale.x - dest_scale) / 4.0;
     game_layer.scale.y -= (game_layer.scale.y - dest_scale) / 4.0;
-    ui_layer.scale = game_layer.scale;
+    debug_layer.scale = game_layer.scale;
     renderer.render(stage);
     dt = new Date().getTime() - start_time;
     fps = 60;

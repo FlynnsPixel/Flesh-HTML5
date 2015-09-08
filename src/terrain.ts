@@ -84,6 +84,29 @@ class TerrainMesh {
 		this.parent.container.addChild(this.mesh);
 	}
 
+	debug_draw() {
+		var vertices = this.static_vertices;
+		var indices = this.static_indices;
+		var s = this.parent.parent.get_scale();
+		for (var n = 0; n < indices.length; ++n) {
+			var i = Number(indices[n]) * 2;
+			var x = (Number(vertices[i]) + this.parent.pos.x) * s;
+			var y = (Number(vertices[i + 1]) + this.parent.pos.y) * s;
+			if (n % 3 == 0) {
+				this.parent.graphics.moveTo(x, y);
+			}else {
+				this.parent.graphics.lineTo(x, y);
+			}
+			if (n % 3 == 2) {
+				i = Number(indices[n - 2]) * 2;
+				x = (Number(vertices[i]) + this.parent.pos.x) * s;
+				y = (Number(vertices[i + 1]) + this.parent.pos.y) * s;
+				this.parent.graphics.lineTo(x, y);
+			}
+		}
+		this.parent.graphics.endFill();
+	}
+
 	get_tex(): PIXI.Texture { return this.tex; }
 	get_static_vertices(): Float32Array { return this.static_vertices; }
 	get_static_indices(): Uint16Array { return this.static_indices; }
@@ -104,6 +127,7 @@ class Terrain {
 	parent: TerrainContainer;
 	collider_points: number[];
 	pos: PIXI.Point = new PIXI.Point(0, 0);
+	graphics: PIXI.Graphics = new PIXI.Graphics();
 
 	/**
 	* constructs a terrain object with the specified json object
@@ -123,6 +147,16 @@ class Terrain {
 
 		this.fill_mesh = new TerrainMesh(this, json_obj, TerrainGeometryType.FILL);
 		this.edges_mesh = new TerrainMesh(this, json_obj, TerrainGeometryType.EDGES);
+
+		debug_layer.addChild(this.graphics);
+	}
+
+	debug_draw() {
+		this.graphics.clear();
+		this.graphics.lineStyle(1, 0x0000ff, 1);
+
+		this.fill_mesh.debug_draw();
+		this.edges_mesh.debug_draw();
 	}
 };
 
@@ -157,6 +191,12 @@ class TerrainContainer {
 		var bounds = this.container.getBounds();
 		bounds.x *= this.scale; bounds.y *= this.scale;
 		bounds.width *= this.scale; bounds.height *= this.scale;
+	}
+
+	debug_draw_all() {
+		for (var n = 0; n < this.terrain_list.length; ++n) {
+			this.terrain_list[n].debug_draw();
+		}
 	}
 
 	get_scale(): number { return this.scale; }

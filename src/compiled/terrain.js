@@ -54,6 +54,29 @@ var TerrainMesh = (function () {
         this.mesh.y = this.parent.pos.y;
         this.parent.container.addChild(this.mesh);
     }
+    TerrainMesh.prototype.debug_draw = function () {
+        var vertices = this.static_vertices;
+        var indices = this.static_indices;
+        var s = this.parent.parent.get_scale();
+        for (var n = 0; n < indices.length; ++n) {
+            var i = Number(indices[n]) * 2;
+            var x = (Number(vertices[i]) + this.parent.pos.x) * s;
+            var y = (Number(vertices[i + 1]) + this.parent.pos.y) * s;
+            if (n % 3 == 0) {
+                this.parent.graphics.moveTo(x, y);
+            }
+            else {
+                this.parent.graphics.lineTo(x, y);
+            }
+            if (n % 3 == 2) {
+                i = Number(indices[n - 2]) * 2;
+                x = (Number(vertices[i]) + this.parent.pos.x) * s;
+                y = (Number(vertices[i + 1]) + this.parent.pos.y) * s;
+                this.parent.graphics.lineTo(x, y);
+            }
+        }
+        this.parent.graphics.endFill();
+    };
     TerrainMesh.prototype.get_tex = function () { return this.tex; };
     TerrainMesh.prototype.get_static_vertices = function () { return this.static_vertices; };
     TerrainMesh.prototype.get_static_indices = function () { return this.static_indices; };
@@ -64,6 +87,7 @@ var TerrainMesh = (function () {
 var Terrain = (function () {
     function Terrain(parent_obj, json_obj) {
         this.pos = new PIXI.Point(0, 0);
+        this.graphics = new PIXI.Graphics();
         this.parent = parent_obj;
         this.container = new PIXI.Container();
         this.pos.x = json_obj.pos[0];
@@ -74,7 +98,14 @@ var Terrain = (function () {
         }
         this.fill_mesh = new TerrainMesh(this, json_obj, TerrainGeometryType.FILL);
         this.edges_mesh = new TerrainMesh(this, json_obj, TerrainGeometryType.EDGES);
+        debug_layer.addChild(this.graphics);
     }
+    Terrain.prototype.debug_draw = function () {
+        this.graphics.clear();
+        this.graphics.lineStyle(1, 0x0000ff, 1);
+        this.fill_mesh.debug_draw();
+        this.edges_mesh.debug_draw();
+    };
     return Terrain;
 })();
 ;
@@ -97,6 +128,11 @@ var TerrainContainer = (function () {
         bounds.width *= this.scale;
         bounds.height *= this.scale;
     }
+    TerrainContainer.prototype.debug_draw_all = function () {
+        for (var n = 0; n < this.terrain_list.length; ++n) {
+            this.terrain_list[n].debug_draw();
+        }
+    };
     TerrainContainer.prototype.get_scale = function () { return this.scale; };
     return TerrainContainer;
 })();
