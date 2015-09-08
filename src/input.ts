@@ -1,6 +1,10 @@
 
+/**
+* list of ascii key code identifiers
+**/
 enum KeyCode {
 
+  UNDEFINED = 0,
   BACKSPACE = 8,
   TAB = 9,
   ENTER = 13,
@@ -110,7 +114,28 @@ enum KeyCode {
   SINGLE_QUOTE = 222
 };
 
+var last_key = KeyCode.SINGLE_QUOTE;
+
+class Key {
+
+  pressed = false;
+  down = false;
+  key_code: KeyCode = KeyCode.UNDEFINED;
+};
+
+var keys_down: Key[] = [];
+
 function init_input() {
+  for (var n = 0; n < last_key; ++n) {
+    var key = new Key();
+    key.key_code = KeyCode.UNDEFINED;
+    var code = KeyCode[n];
+    if (code != undefined) {
+      key.key_code = (<any>KeyCode)[n];
+    }
+    keys_down[n] = key;
+  }
+
   document.ontouchstart = on_mouse_down;
   document.ontouchend = on_mouse_up;
   document.onmousedown = on_mouse_down;
@@ -126,7 +151,13 @@ function init_input() {
   	dest_scale = (dest_scale < .1 ) ? .1 : dest_scale;
   	dest_scale = (dest_scale > 2) ? 2 : dest_scale;
 
-  	keys_down[e.keyCode] = true;
+    if (keys_down[e.keyCode].key_code == KeyCode.UNDEFINED) {
+      console.log("key down of key code " + e.keyCode + " is unknown");
+      return;
+    }
+
+  	keys_down[e.keyCode].pressed = true;
+  	keys_down[e.keyCode].down = true;
   };
 
   document.onkeyup = function (e: KeyboardEvent) {
@@ -136,7 +167,13 @@ function init_input() {
   		box1.body.SetLinearVelocity(v);
   	}
 
-  	keys_down[e.keyCode] = false;
+    if (keys_down[e.keyCode].key_code == KeyCode.UNDEFINED) {
+      console.log("key up of key code " + e.keyCode + " is unknown");
+      return;
+    }
+
+  	keys_down[e.keyCode].pressed = false;
+  	keys_down[e.keyCode].down = false;
   }
 }
 

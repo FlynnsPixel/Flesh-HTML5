@@ -13,7 +13,6 @@ var ground;
 var box1;
 var box2;
 var edges;
-var keys_down = [];
 window.onresize = function () {
     resize_canvas();
 };
@@ -39,6 +38,7 @@ window.onload = function () {
     game_layer.addChild(container);
     init_assets(function () {
         init_physics();
+        init_input();
         var terrain_arr = JSON.parse(raw_terrain).terrain;
         terrain_container = new TerrainContainer(terrain_arr);
         game_layer.addChild(terrain_container.container);

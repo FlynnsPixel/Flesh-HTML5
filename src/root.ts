@@ -17,8 +17,6 @@ var box1: PhysicsObject;
 var box2: PhysicsObject;
 var edges: PhysicsObject;
 
-var keys_down: boolean[] = [];
-
 window.onresize = function() {
 	resize_canvas();
 }
@@ -50,7 +48,8 @@ window.onload = function() {
 
 	init_assets(function() {
 		init_physics();
-
+		init_input();
+		
 		var terrain_arr = JSON.parse(raw_terrain).terrain;
 		terrain_container = new TerrainContainer(terrain_arr);
 		game_layer.addChild(terrain_container.container);
