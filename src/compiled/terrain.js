@@ -1,4 +1,6 @@
 /// <reference path="../pixi/pixi.js.d.ts" />
+var forest_fill;
+var forest_edges;
 var TerrainGeometryType;
 (function (TerrainGeometryType) {
     TerrainGeometryType[TerrainGeometryType["FILL"] = 0] = "FILL";
@@ -76,15 +78,6 @@ var Terrain = (function () {
     return Terrain;
 })();
 ;
-function calculate_min_max_rect(b1, b2) {
-    b1.x = (b2.x < b1.x) ? b2.x : b1.x;
-    b1.y = (b2.y < b1.y) ? b2.y : b1.y;
-    b1.width = (b2.width > b1.width) ? b2.width : b1.width;
-    b1.height = (b2.height > b1.height) ? b2.height : b1.height;
-    return b1;
-}
-var forest_fill;
-var forest_edges;
 var TerrainContainer = (function () {
     function TerrainContainer(complete_json_data) {
         this.terrain_list = [];
@@ -108,3 +101,10 @@ var TerrainContainer = (function () {
     return TerrainContainer;
 })();
 ;
+function calculate_min_max_rect(b1, b2) {
+    b1.x = (b2.x < b1.x) ? b2.x : b1.x;
+    b1.y = (b2.y < b1.y) ? b2.y : b1.y;
+    b1.width = (b2.width > b1.width) ? b2.width : b1.width;
+    b1.height = (b2.height > b1.height) ? b2.height : b1.height;
+    return b1;
+}

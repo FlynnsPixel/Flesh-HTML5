@@ -1,10 +1,20 @@
 /// <reference path="../pixi/pixi.js.d.ts" />
 
+var forest_fill: PIXI.Texture;
+var forest_edges: PIXI.Texture;
+
 enum TerrainGeometryType {
 	FILL,
 	EDGES
 };
 
+/**
+* terrain mesh handles a geometric part of a
+* terrain object (either fill or edges).
+* it contains vertices, indices, uvs and a texture
+* which can all be modified.
+* a terrain mesh is generally only part of a terrain object
+**/
 class TerrainMesh {
 
 	mesh: PIXI.mesh.Mesh;
@@ -15,12 +25,16 @@ class TerrainMesh {
 	dynamic_indices: number[] = [];
 	dynamic_uvs: number[] = [];
 
-	private static_vertices: Float32Array[];
-	private static_indices: Uint16Array[];
-	private static_uvs: Float32Array[];
+	private static_vertices: Float32Array;
+	private static_indices: Uint16Array;
+	private static_uvs: Float32Array;
 
 	private tex: PIXI.Texture;
 
+	/**
+	* constructs the geometry of the passed in vertices, indices, uvs, ect
+	* which is specified with a json object (go to terrain container for more information)
+	**/
 	constructor(parent_obj: Terrain, json_obj, geometry_type: TerrainGeometryType) {
 		this.parent = parent_obj;
 		this.type = geometry_type;
@@ -71,11 +85,17 @@ class TerrainMesh {
 	}
 
 	get_tex(): PIXI.Texture { return this.tex; }
-	get_static_vertices(): Float32Array[] { return this.static_vertices; }
-	get_static_indices(): Uint16Array[] { return this.static_indices; }
-	get_static_uvs(): Float32Array[] { return this.static_uvs; }
+	get_static_vertices(): Float32Array { return this.static_vertices; }
+	get_static_indices(): Uint16Array { return this.static_indices; }
+	get_static_uvs(): Float32Array { return this.static_uvs; }
 };
 
+/**
+* terrain class that holds data about a terrain chunk.
+* this data includes the fill mesh, edges, collider points
+* and the position of the terrain.
+* a terrain object is generally only part of a terrain group
+**/
 class Terrain {
 
 	fill_mesh: TerrainMesh;
@@ -85,6 +105,10 @@ class Terrain {
 	collider_points: number[];
 	pos: PIXI.Point = new PIXI.Point(0, 0);
 
+	/**
+	* constructs a terrain object with the specified json object
+	* attributes. (go to terrain container for more information)
+	**/
 	public constructor(parent_obj: TerrainContainer, json_obj) {
 		this.parent = parent_obj;
 		this.container = new PIXI.Container();
@@ -102,26 +126,25 @@ class Terrain {
 	}
 };
 
-function calculate_min_max_rect(b1: PIXI.Rectangle, b2: PIXI.Rectangle): PIXI.Rectangle {
-	b1.x = (b2.x < b1.x) ? b2.x : b1.x;
-	b1.y = (b2.y < b1.y) ? b2.y : b1.y;
-	b1.width = (b2.width > b1.width) ? b2.width : b1.width;
-	b1.height = (b2.height > b1.height) ? b2.height : b1.height;
-	return b1;
-}
-
-var forest_fill: PIXI.Texture;
-var forest_edges: PIXI.Texture;
-
+/**
+* a terrain container holds all terrain objects as well as
+* the global terrain properties such as scale
+**/
 class TerrainContainer {
 
 	terrain_list: Terrain[] = [];
 	container: PIXI.Container;
 	private scale: number = 20.0;
 
+	/**
+	* takes in a json object that contains all data for terrain objects
+	* this data is generally exported using a unity ferr2d export script
+	**/
 	constructor(complete_json_data) {
 		this.container = new PIXI.Container();
 
+		//loops through json array and creates a terrain object
+		//for each element
 		for (var i = 0; i < complete_json_data.length; ++i) {
 			var terrain_obj = complete_json_data[i];
 			var terrain = new Terrain(this, terrain_obj);
@@ -138,3 +161,11 @@ class TerrainContainer {
 
 	get_scale(): number { return this.scale; }
 };
+
+function calculate_min_max_rect(b1: PIXI.Rectangle, b2: PIXI.Rectangle): PIXI.Rectangle {
+	b1.x = (b2.x < b1.x) ? b2.x : b1.x;
+	b1.y = (b2.y < b1.y) ? b2.y : b1.y;
+	b1.width = (b2.width > b1.width) ? b2.width : b1.width;
+	b1.height = (b2.height > b1.height) ? b2.height : b1.height;
+	return b1;
+}

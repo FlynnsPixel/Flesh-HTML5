@@ -59,7 +59,7 @@ window.onload = function () {
         ground.set_pos(0 + game_layer.pivot.x - game_layer.x, 400 + game_layer.pivot.y - game_layer.y);
         ground.body.SetAngle(-55 / (180 / Math.PI));
         box1 = new PhysicsObject(PhysicsBodyType.DYNAMIC);
-        box1.create_box(bunny.width, bunny.height);
+        box1.create_circle(16);
         box1.body.ResetMassData();
         box1.body.SetFixedRotation(true);
         box1.set_pos(400 + game_layer.pivot.x - game_layer.x, 200 + game_layer.pivot.y - game_layer.y);
