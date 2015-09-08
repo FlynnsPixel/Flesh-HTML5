@@ -49,7 +49,7 @@ window.onload = function() {
 	init_assets(function() {
 		init_physics();
 		init_input();
-		
+
 		var terrain_arr = JSON.parse(raw_terrain).terrain;
 		terrain_container = new TerrainContainer(terrain_arr);
 		game_layer.addChild(terrain_container.container);
@@ -105,19 +105,32 @@ setInterval(function() {
 }, 1000);
 
 function game_loop() {
-	var start_time = new Date().getTime();
+	if (is_key_down(KeyCode.EQUALS)) {
+		dest_scale += .1;
+	}else if (is_key_down(KeyCode.DASH)) {
+		dest_scale -= .1;
+	}
 
-	update_physics();
+	dest_scale = (dest_scale < .1 ) ? .1 : dest_scale;
+	dest_scale = (dest_scale > 2) ? 2 : dest_scale;
+
+	if (is_key_pressed(KeyCode.UP_ARROW)) {
+		var v = box1.body.GetLinearVelocity();
+		v.y = -4;
+		box1.body.SetLinearVelocity(v);
+	}
+
+	var start_time = new Date().getTime();
 
 	var v = box1.body.GetLinearVelocity();
 	var av = box1.body.GetAngularVelocity();
 	var inputting = false;
 	box1.fixture.SetFriction(12.0);
-	if (keys_down[37]) {
+	if (is_key_down(KeyCode.LEFT_ARROW)) {
 		v.x = -2;
 		inputting = true;
 		box1.fixture.SetFriction(0.0);
-	}else if (keys_down[39]) {
+	}else if (is_key_down(KeyCode.RIGHT_ARROW)) {
 		v.x = 2;
 		inputting = true;
 		box1.fixture.SetFriction(0.0);
@@ -169,4 +182,7 @@ function game_loop() {
 	}else {
 		setTimeout(game_loop, (time_step * 1000.0) - dt);
 	}
+
+	update_physics();
+	update_input();
 }

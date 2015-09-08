@@ -85,18 +85,30 @@ setInterval(function () {
     frame_count = 0;
 }, 1000);
 function game_loop() {
+    if (is_key_down(KeyCode.EQUALS)) {
+        dest_scale += .1;
+    }
+    else if (is_key_down(KeyCode.DASH)) {
+        dest_scale -= .1;
+    }
+    dest_scale = (dest_scale < .1) ? .1 : dest_scale;
+    dest_scale = (dest_scale > 2) ? 2 : dest_scale;
+    if (is_key_pressed(KeyCode.UP_ARROW)) {
+        var v = box1.body.GetLinearVelocity();
+        v.y = -4;
+        box1.body.SetLinearVelocity(v);
+    }
     var start_time = new Date().getTime();
-    update_physics();
     var v = box1.body.GetLinearVelocity();
     var av = box1.body.GetAngularVelocity();
     var inputting = false;
     box1.fixture.SetFriction(12.0);
-    if (keys_down[37]) {
+    if (is_key_down(KeyCode.LEFT_ARROW)) {
         v.x = -2;
         inputting = true;
         box1.fixture.SetFriction(0.0);
     }
-    else if (keys_down[39]) {
+    else if (is_key_down(KeyCode.RIGHT_ARROW)) {
         v.x = 2;
         inputting = true;
         box1.fixture.SetFriction(0.0);
@@ -125,4 +137,6 @@ function game_loop() {
     else {
         setTimeout(game_loop, (time_step * 1000.0) - dt);
     }
+    update_physics();
+    update_input();
 }

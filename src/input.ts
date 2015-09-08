@@ -123,7 +123,7 @@ class Key {
   key_code: KeyCode = KeyCode.UNDEFINED;
 };
 
-var keys_down: Key[] = [];
+var key_list: Key[] = [];
 
 function init_input() {
   for (var n = 0; n < last_key; ++n) {
@@ -133,7 +133,7 @@ function init_input() {
     if (code != undefined) {
       key.key_code = (<any>KeyCode)[n];
     }
-    keys_down[n] = key;
+    key_list[n] = key;
   }
 
   document.ontouchstart = on_mouse_down;
@@ -142,38 +142,25 @@ function init_input() {
   document.onmouseup = on_mouse_up;
 
   document.onkeydown = function (e: KeyboardEvent) {
-  	if (e.keyCode == 187) {
-  		dest_scale += .1;
-  	}else if (e.keyCode == 189) {
-  		dest_scale -= .1;
-  	}
-
-  	dest_scale = (dest_scale < .1 ) ? .1 : dest_scale;
-  	dest_scale = (dest_scale > 2) ? 2 : dest_scale;
-
-    if (keys_down[e.keyCode].key_code == KeyCode.UNDEFINED) {
+    if (key_list[e.keyCode].key_code == KeyCode.UNDEFINED) {
       console.log("key down of key code " + e.keyCode + " is unknown");
       return;
     }
 
-  	keys_down[e.keyCode].pressed = true;
-  	keys_down[e.keyCode].down = true;
+    if (!key_list[e.keyCode].down) {
+    	key_list[e.keyCode].pressed = true;
+    	key_list[e.keyCode].down = true;
+    }
   };
 
   document.onkeyup = function (e: KeyboardEvent) {
-  	if (keys_down[38]) {
-  		var v = box1.body.GetLinearVelocity();
-  		v.y = -4;
-  		box1.body.SetLinearVelocity(v);
-  	}
-
-    if (keys_down[e.keyCode].key_code == KeyCode.UNDEFINED) {
+    if (key_list[e.keyCode].key_code == KeyCode.UNDEFINED) {
       console.log("key up of key code " + e.keyCode + " is unknown");
       return;
     }
 
-  	keys_down[e.keyCode].pressed = false;
-  	keys_down[e.keyCode].down = false;
+  	key_list[e.keyCode].pressed = false;
+  	key_list[e.keyCode].down = false;
   }
 }
 
@@ -184,4 +171,31 @@ function on_mouse_down() {
 
 function on_mouse_up() {
 
+}
+
+function update_input() {
+  for (var n = 0; n < key_list.length; ++n) {
+    if (key_list[n].key_code != KeyCode.UNDEFINED) {
+      key_list[n].pressed = false;
+    }
+  }
+}
+
+function get_key(key_code: KeyCode): Key {
+  if (key_code < 0 || key_code >= key_list.length) {
+    console.log("key code " + key_code + " is out of bounds");
+    return key_list[0];
+  }else if (key_list[key_code].key_code == KeyCode.UNDEFINED) {
+    console.log("key code " + key_code + " is undefined");
+    return key_list[0];
+  }
+  return key_list[key_code];
+}
+
+function is_key_down(key_code: KeyCode): boolean {
+  return get_key(key_code).down;
+}
+
+function is_key_pressed(key_code: KeyCode): boolean {
+  return get_key(key_code).pressed;
 }
