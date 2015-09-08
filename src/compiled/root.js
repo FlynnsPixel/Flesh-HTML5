@@ -91,6 +91,9 @@ function game_loop() {
     else if (is_key_down(KeyCode.DASH)) {
         dest_scale -= .1;
     }
+    if (mouse_wheel_moving) {
+        dest_scale += (mouse_wheel_delta_y / Math.abs(mouse_wheel_delta_y)) * .1;
+    }
     dest_scale = (dest_scale < .1) ? .1 : dest_scale;
     dest_scale = (dest_scale > 2) ? 2 : dest_scale;
     if (is_key_pressed(KeyCode.UP_ARROW)) {
@@ -99,6 +102,9 @@ function game_loop() {
         box1.body.SetLinearVelocity(v);
     }
     var start_time = new Date().getTime();
+    if (is_mouse_button_pressed(MouseButtonID.MIDDLE)) {
+        console.log("down");
+    }
     var v = box1.body.GetLinearVelocity();
     var av = box1.body.GetAngularVelocity();
     var inputting = false;

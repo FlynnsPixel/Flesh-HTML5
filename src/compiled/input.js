@@ -109,7 +109,6 @@ var MouseButtonID;
     MouseButtonID[MouseButtonID["RIGHT"] = 3] = "RIGHT";
 })(MouseButtonID || (MouseButtonID = {}));
 ;
-var last_key = KeyCode.SINGLE_QUOTE;
 var Key = (function () {
     function Key() {
         this.pressed = false;
@@ -119,8 +118,6 @@ var Key = (function () {
     return Key;
 })();
 ;
-var key_list = [];
-var mouse_list = [];
 var MouseButton = (function () {
     function MouseButton(button_id) {
         this.pressed = false;
@@ -130,13 +127,11 @@ var MouseButton = (function () {
     return MouseButton;
 })();
 ;
-function get_mouse_button(button_id) {
-    if (button_id < 0 || button_id >= mouse_list.length) {
-        console.log("button id " + button_id + " is out of bounds");
-        return mouse_list[0];
-    }
-    return mouse_list[button_id + 1];
-}
+var last_key = KeyCode.SINGLE_QUOTE;
+var key_list = [];
+var mouse_list = [];
+var mouse_wheel_delta_y;
+var mouse_wheel_moving = false;
 function init_input() {
     for (var n = 0; n < last_key; ++n) {
         var key = new Key();
@@ -156,12 +151,16 @@ function init_input() {
     document.ontouchend = function (e) {
     };
     document.onmousedown = function (e) {
-        get_mouse_button(e.button).down = true;
-        get_mouse_button(e.button).pressed = true;
+        get_mouse_button(e.button + 1).down = true;
+        get_mouse_button(e.button + 1).pressed = true;
     };
     document.onmouseup = function (e) {
-        get_mouse_button(e.button).down = false;
-        get_mouse_button(e.button).pressed = false;
+        get_mouse_button(e.button + 1).down = false;
+        get_mouse_button(e.button + 1).pressed = false;
+    };
+    document.onmousewheel = function (e) {
+        mouse_wheel_delta_y = e.wheelDeltaY;
+        mouse_wheel_moving = true;
     };
     document.onkeydown = function (e) {
         if (key_list[e.keyCode].key_code == KeyCode.UNDEFINED) {
@@ -191,6 +190,7 @@ function update_input() {
     for (var n = 0; n < mouse_list.length; ++n) {
         mouse_list[n].pressed = false;
     }
+    mouse_wheel_moving = false;
 }
 function get_key(key_code) {
     if (key_code < 0 || key_code >= key_list.length) {
@@ -208,6 +208,13 @@ function is_key_down(key_code) {
 }
 function is_key_pressed(key_code) {
     return get_key(key_code).pressed;
+}
+function get_mouse_button(button_id) {
+    if (button_id < 0 || button_id >= mouse_list.length) {
+        console.log("button id " + button_id + " is out of bounds");
+        return mouse_list[0];
+    }
+    return mouse_list[button_id];
 }
 function is_mouse_button_down(button_id) {
     return get_mouse_button(button_id).down;
