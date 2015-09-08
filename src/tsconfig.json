@@ -22,6 +22,7 @@
     ],
     "files": [
         "./assets.ts",
+        "./input.ts",
         "./physics.ts",
         "./root.ts",
         "./terrain.ts"

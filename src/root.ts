@@ -59,14 +59,6 @@ window.onload = function() {
 		game_layer.pivot.x = game_layer.width / 2.0;
 		game_layer.pivot.y = game_layer.height / 2.0;
 
-		document.ontouchstart = mouse_down;
-		document.ontouchend = mouse_up;
-		document.onmousedown = mouse_down;
-		document.onmouseup = mouse_up;
-
-		document.onkeydown = on_key_down;
-		document.onkeyup = on_key_up;
-
 		bunny = new PIXI.Sprite(texture_bunny);
 		game_layer.addChild(bunny);
 
@@ -97,39 +89,6 @@ window.onload = function() {
 
 		game_loop();
 	});
-}
-
-function on_key_down(e) {
-	e = e || window.event;
-
-	if (e.keyCode == 187) {
-		dest_scale += .1;
-	}else if (e.keyCode == 189) {
-		dest_scale -= .1;
-	}
-
-	dest_scale = (dest_scale < .1 ) ? .1 : dest_scale;
-	dest_scale = (dest_scale > 2) ? 2 : dest_scale;
-
-	keys_down[e.keyCode] = true;
-}
-
-function on_key_up(e) {
-	if (keys_down[38]) {
-		var v = box1.body.GetLinearVelocity();
-		v.y = -4;
-		box1.body.SetLinearVelocity(v);
-	}
-
-	keys_down[e.keyCode] = false;
-}
-
-function mouse_down() {
-	is_adding = true;
-}
-
-function mouse_up() {
-	is_adding = false;
 }
 
 var fps = 0;
