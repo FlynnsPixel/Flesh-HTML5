@@ -93,8 +93,41 @@ window.onload = function() {
 												 terrain_container.get_scale(), terrain_container.terrain_list[n].pos);
 		}
 
+		var x = 25;
+		var y = 0;
+		var radius = 10;
+
+		remove_circle_chunk(x, y, radius, terrain_container.terrain_list[1].fill_mesh);
+		remove_circle_chunk(x, y, radius, terrain_container.terrain_list[1].edges_mesh);
+
 		game_loop();
 	});
+}
+
+function remove_circle_chunk(x: number, y: number, radius: number, mesh: TerrainMesh) {
+	var verts = mesh.dynamic_vertices;
+	var indices = mesh.dynamic_indices;
+
+	var c_x = 0;
+	var c_y = 0;
+
+	for (var n = 0; n < indices.length; ++n) {
+		c_x += verts[indices[n] * 2];
+		c_y += verts[(indices[n] * 2) + 1];
+		if (n % 3 == 2) {
+			c_x /= 3;
+			c_y /= 3;
+			var dist = Math.sqrt(Math.pow(c_x - x, 2) + Math.pow(c_y - y, 2));
+			if (dist < radius) {
+				indices.splice(n - 2, 3);
+				n -= 3;
+			}
+			c_x = 0;
+			c_y = 0;
+		}
+	}
+
+	mesh.update_geometry();
 }
 
 var fps = 0;
@@ -112,6 +145,8 @@ setInterval(function() {
 }, 1000);
 
 function game_loop() {
+	terrain_container.debug_draw_all();
+
 	if (is_key_down(KeyCode.EQUALS)) {
 		dest_scale += .1;
 	}else if (is_key_down(KeyCode.DASH)) {

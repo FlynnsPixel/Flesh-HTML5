@@ -84,6 +84,12 @@ class TerrainMesh {
 		this.parent.container.addChild(this.mesh);
 	}
 
+	update_geometry() {
+		delete this.static_indices;
+		this.static_indices = new Uint16Array(this.dynamic_indices);
+		this.mesh.indices = this.static_indices;
+	}
+
 	/**
 	* draws this mesh in the debug layer, line by line
 	* warning: is really slow, should be used carefully

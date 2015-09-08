@@ -54,6 +54,11 @@ var TerrainMesh = (function () {
         this.mesh.y = this.parent.pos.y;
         this.parent.container.addChild(this.mesh);
     }
+    TerrainMesh.prototype.update_geometry = function () {
+        delete this.static_indices;
+        this.static_indices = new Uint16Array(this.dynamic_indices);
+        this.mesh.indices = this.static_indices;
+    };
     TerrainMesh.prototype.debug_draw = function () {
         var vertices = this.static_vertices;
         var indices = this.static_indices;
