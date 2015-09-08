@@ -114,6 +114,14 @@ enum KeyCode {
   SINGLE_QUOTE = 222
 };
 
+enum MouseButtonID {
+
+  UNKNOWN,
+  LEFT,
+  MIDDLE,
+  RIGHT
+};
+
 var last_key = KeyCode.SINGLE_QUOTE;
 
 class Key {
@@ -124,6 +132,26 @@ class Key {
 };
 
 var key_list: Key[] = [];
+var mouse_list: MouseButton[] = [];
+
+class MouseButton {
+
+  pressed = false;
+  down = false;
+  button_id: MouseButtonID;
+
+  constructor(button_id: MouseButtonID) {
+    this.button_id = button_id;
+  }
+};
+
+function get_mouse_button(button_id: MouseButtonID): MouseButton {
+  if (button_id < 0 || button_id >= mouse_list.length) {
+    console.log("button id " + button_id + " is out of bounds");
+    return mouse_list[0];
+  }
+  return mouse_list[button_id + 1];
+}
 
 function init_input() {
   for (var n = 0; n < last_key; ++n) {
@@ -135,11 +163,25 @@ function init_input() {
     }
     key_list[n] = key;
   }
+  mouse_list[0] = new MouseButton(MouseButtonID.UNKNOWN);
+  mouse_list[1] = new MouseButton(MouseButtonID.LEFT);
+  mouse_list[2] = new MouseButton(MouseButtonID.MIDDLE);
+  mouse_list[3] = new MouseButton(MouseButtonID.RIGHT);
 
-  document.ontouchstart = on_mouse_down;
-  document.ontouchend = on_mouse_up;
-  document.onmousedown = on_mouse_down;
-  document.onmouseup = on_mouse_up;
+  document.ontouchstart = function (e: TouchEvent) {
+
+  };
+  document.ontouchend = function (e: TouchEvent) {
+
+  };
+  document.onmousedown = function (e: MouseEvent) {
+    get_mouse_button(e.button).down = true;
+    get_mouse_button(e.button).pressed = true;
+  };
+  document.onmouseup = function (e: MouseEvent) {
+    get_mouse_button(e.button).down = false;
+    get_mouse_button(e.button).pressed = false;
+  };
 
   document.onkeydown = function (e: KeyboardEvent) {
     if (key_list[e.keyCode].key_code == KeyCode.UNDEFINED) {
@@ -164,20 +206,14 @@ function init_input() {
   }
 }
 
-
-function on_mouse_down() {
-
-}
-
-function on_mouse_up() {
-
-}
-
 function update_input() {
   for (var n = 0; n < key_list.length; ++n) {
     if (key_list[n].key_code != KeyCode.UNDEFINED) {
       key_list[n].pressed = false;
     }
+  }
+  for (var n = 0; n < mouse_list.length; ++n) {
+    mouse_list[n].pressed = false;
   }
 }
 
@@ -198,4 +234,12 @@ function is_key_down(key_code: KeyCode): boolean {
 
 function is_key_pressed(key_code: KeyCode): boolean {
   return get_key(key_code).pressed;
+}
+
+function is_mouse_button_down(button_id: MouseButtonID): boolean {
+  return get_mouse_button(button_id).down;
+}
+
+function is_mouse_button_pressed(button_id: MouseButtonID): boolean {
+  return get_mouse_button(button_id).pressed;
 }

@@ -101,6 +101,14 @@ var KeyCode;
     KeyCode[KeyCode["SINGLE_QUOTE"] = 222] = "SINGLE_QUOTE";
 })(KeyCode || (KeyCode = {}));
 ;
+var MouseButtonID;
+(function (MouseButtonID) {
+    MouseButtonID[MouseButtonID["UNKNOWN"] = 0] = "UNKNOWN";
+    MouseButtonID[MouseButtonID["LEFT"] = 1] = "LEFT";
+    MouseButtonID[MouseButtonID["MIDDLE"] = 2] = "MIDDLE";
+    MouseButtonID[MouseButtonID["RIGHT"] = 3] = "RIGHT";
+})(MouseButtonID || (MouseButtonID = {}));
+;
 var last_key = KeyCode.SINGLE_QUOTE;
 var Key = (function () {
     function Key() {
@@ -112,6 +120,23 @@ var Key = (function () {
 })();
 ;
 var key_list = [];
+var mouse_list = [];
+var MouseButton = (function () {
+    function MouseButton(button_id) {
+        this.pressed = false;
+        this.down = false;
+        this.button_id = button_id;
+    }
+    return MouseButton;
+})();
+;
+function get_mouse_button(button_id) {
+    if (button_id < 0 || button_id >= mouse_list.length) {
+        console.log("button id " + button_id + " is out of bounds");
+        return mouse_list[0];
+    }
+    return mouse_list[button_id + 1];
+}
 function init_input() {
     for (var n = 0; n < last_key; ++n) {
         var key = new Key();
@@ -122,10 +147,22 @@ function init_input() {
         }
         key_list[n] = key;
     }
-    document.ontouchstart = on_mouse_down;
-    document.ontouchend = on_mouse_up;
-    document.onmousedown = on_mouse_down;
-    document.onmouseup = on_mouse_up;
+    mouse_list[0] = new MouseButton(MouseButtonID.UNKNOWN);
+    mouse_list[1] = new MouseButton(MouseButtonID.LEFT);
+    mouse_list[2] = new MouseButton(MouseButtonID.MIDDLE);
+    mouse_list[3] = new MouseButton(MouseButtonID.RIGHT);
+    document.ontouchstart = function (e) {
+    };
+    document.ontouchend = function (e) {
+    };
+    document.onmousedown = function (e) {
+        get_mouse_button(e.button).down = true;
+        get_mouse_button(e.button).pressed = true;
+    };
+    document.onmouseup = function (e) {
+        get_mouse_button(e.button).down = false;
+        get_mouse_button(e.button).pressed = false;
+    };
     document.onkeydown = function (e) {
         if (key_list[e.keyCode].key_code == KeyCode.UNDEFINED) {
             console.log("key down of key code " + e.keyCode + " is unknown");
@@ -145,15 +182,14 @@ function init_input() {
         key_list[e.keyCode].down = false;
     };
 }
-function on_mouse_down() {
-}
-function on_mouse_up() {
-}
 function update_input() {
     for (var n = 0; n < key_list.length; ++n) {
         if (key_list[n].key_code != KeyCode.UNDEFINED) {
             key_list[n].pressed = false;
         }
+    }
+    for (var n = 0; n < mouse_list.length; ++n) {
+        mouse_list[n].pressed = false;
     }
 }
 function get_key(key_code) {
@@ -172,4 +208,10 @@ function is_key_down(key_code) {
 }
 function is_key_pressed(key_code) {
     return get_key(key_code).pressed;
+}
+function is_mouse_button_down(button_id) {
+    return get_mouse_button(button_id).down;
+}
+function is_mouse_button_pressed(button_id) {
+    return get_mouse_button(button_id).pressed;
 }
