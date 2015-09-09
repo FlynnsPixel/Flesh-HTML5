@@ -151,7 +151,7 @@ class TerrainMesh {
 		this.collider_index += 4;
 	}
 
-	update_geometry() {
+	update_indices() {
 		delete this.static_indices;
 		this.static_indices = new Uint16Array(this.dynamic_indices);
 		this.mesh.indices = this.static_indices;

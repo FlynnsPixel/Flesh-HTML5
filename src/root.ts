@@ -86,21 +86,11 @@ window.onload = function() {
 		box2.body.ResetMassData();
 		box2.set_pos(250 + game_layer.pivot.x - game_layer.x, game_layer.pivot.y - game_layer.y);
 
-		var t = terrain_container.terrain_list[1];
-		var x = 25;
-		var y = 0;
-		var radius = 4;
-		
-		remove_circle_chunk(x, y, radius, t.fill_mesh);
-		remove_circle_chunk(x, y, radius, t.edges_mesh);
-
-		t.recalc_collider_points();
-
 		game_loop();
 	});
 }
 
-function remove_circle_chunk(x: number, y: number, radius: number, mesh: TerrainMesh) {
+function remove_circle_chunk_mesh(x: number, y: number, radius: number, mesh: TerrainMesh) {
 	var verts = mesh.dynamic_vertices;
 	var indices = mesh.dynamic_indices;
 
@@ -108,8 +98,8 @@ function remove_circle_chunk(x: number, y: number, radius: number, mesh: Terrain
 	var c_y = 0;
 
 	for (var n = 0; n < indices.length; ++n) {
-		c_x += verts[indices[n] * 2];
-		c_y += verts[(indices[n] * 2) + 1];
+		c_x += (verts[indices[n] * 2] + mesh.parent.pos.x) * mesh.parent.parent.get_scale();
+		c_y += (verts[(indices[n] * 2) + 1] + mesh.parent.pos.y) * mesh.parent.parent.get_scale();
 		if (n % 3 == 2) {
 			c_x /= 3;
 			c_y /= 3;
@@ -123,7 +113,15 @@ function remove_circle_chunk(x: number, y: number, radius: number, mesh: Terrain
 		}
 	}
 
-	mesh.update_geometry();
+	mesh.update_indices();
+}
+
+function remove_circle_chunk(x: number, y: number, radius: number) {
+	for (var i = 0; i < terrain_container.terrain_list.length; ++i) {
+		remove_circle_chunk_mesh(x, y, radius, terrain_container.terrain_list[i].fill_mesh);
+		remove_circle_chunk_mesh(x, y, radius, terrain_container.terrain_list[i].edges_mesh);
+		terrain_container.terrain_list[i].recalc_collider_points();
+	}
 }
 
 var fps = 0;
@@ -139,6 +137,14 @@ setInterval(function() {
 	ms_accum = 0;
 	frame_count = 0;
 }, 1000);
+
+setInterval(function() {
+	var x = box1.body.GetPosition().x / B2_METERS;
+	var y = box1.body.GetPosition().y / B2_METERS;
+	var radius = 40;
+	remove_circle_chunk(x, y, radius);
+	remove_circle_chunk(x, y, radius);
+}, 100);
 
 function game_loop() {
 	terrain_container.debug_draw_all();

@@ -116,7 +116,7 @@ var TerrainMesh = (function () {
         this.parent.collider_points[this.collider_index + 3] = this.dynamic_vertices[(i2 * 2) + 1];
         this.collider_index += 4;
     };
-    TerrainMesh.prototype.update_geometry = function () {
+    TerrainMesh.prototype.update_indices = function () {
         delete this.static_indices;
         this.static_indices = new Uint16Array(this.dynamic_indices);
         this.mesh.indices = this.static_indices;
