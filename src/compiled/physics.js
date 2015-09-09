@@ -108,6 +108,11 @@ var PhysicsObject = (function () {
             ++i;
         }
     };
+    PhysicsObject.prototype.destroy_all_fixtures = function () {
+        while (this.body.GetFixtureList()) {
+            this.body.DestroyFixture(this.body.GetFixtureList());
+        }
+    };
     PhysicsObject.prototype.calculate_aabb = function () {
         this.aabb.lowerBound = new b2Math.b2Vec2(10000, 10000);
         this.aabb.upperBound = new b2Math.b2Vec2(-10000, -10000);

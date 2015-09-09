@@ -184,6 +184,7 @@ class TerrainMesh {
 			index += 4;
 		}
 		edges = [];
+		this.parent.collider_points.length = index;
 
 		console.log("count: " + count + " / " + (this.dynamic_indices.length / 3));
 	}
@@ -255,7 +256,6 @@ class Terrain {
 		this.pos.y = -json_obj.pos[1];
 
 		var i = 0;
-		console.log("collide points: " + json_obj.collider_points.length);
 		for (var n = 0; n < 40; n += 2) {
 			this.collider_points[i] = json_obj.collider_points[n];
 			this.collider_points[i + 1] = -json_obj.collider_points[n + 1];
@@ -269,6 +269,13 @@ class Terrain {
 		this.edge_physics.create_edges(this.collider_points, this.parent.get_scale(), this.pos);
 
 		debug_layer.addChild(this.graphics);
+	}
+
+	recalc_collider_points() {
+		this.fill_mesh.recalc_collider_points();
+
+		this.edge_physics.destroy_all_fixtures();
+		this.edge_physics.create_edges(this.collider_points, this.parent.get_scale(), this.pos);
 	}
 
 	/**

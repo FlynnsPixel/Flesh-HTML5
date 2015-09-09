@@ -91,11 +91,11 @@ window.onload = function() {
 		var y = 0;
 		var radius = 10;
 
-		//remove_circle_chunk(x, y, radius, t.fill_mesh);
-		//remove_circle_chunk(x, y, radius, t.edges_mesh);
+		remove_circle_chunk(x, y, radius, t.fill_mesh);
+		remove_circle_chunk(x, y, radius, t.edges_mesh);
 
-		console.log(t.collider_points.length);
-		t.collider_points[0] = 400;
+		t.recalc_collider_points();
+
 		//edges.update_edge_at(0, new b2Math.b2Vec2(t.collider_points[0], t.collider_points[1]), terrain_container.get_scale(), t.pos);
 
 		//console.log(edges.fixture_list.length);

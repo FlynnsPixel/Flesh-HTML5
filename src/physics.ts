@@ -157,6 +157,15 @@ class PhysicsObject {
   }
 
   /**
+  * destroys all fixtures attached to this physics body
+  **/
+  destroy_all_fixtures() {
+    while (this.body.GetFixtureList()) {
+      this.body.DestroyFixture(this.body.GetFixtureList());
+    }
+  }
+
+  /**
   * calculates combined aabb of physics object
   **/
   calculate_aabb() {
