@@ -73,8 +73,7 @@ var TerrainMesh = (function () {
         this.parent.container.addChild(this.mesh);
     }
     TerrainMesh.prototype.recalc_collider_points = function () {
-        var count = 0;
-        var edges = [];
+        var index = 0;
         for (var n = 0; n < this.dynamic_indices.length; n += 3) {
             var p1 = this.dynamic_indices[n];
             var p2 = this.dynamic_indices[n + 1];
@@ -100,58 +99,28 @@ var TerrainMesh = (function () {
                 }
             }
             if (!p1_ol || !p2_ol || !p3_ol) {
-                var i = 0;
-                if (!p1_ol)
-                    i = p1;
-                else if (!p2_ol)
-                    i = p2;
-                else if (!p3_ol)
-                    i = p3;
-                var node = new EdgeNode();
-                node.id = i;
-                node.x = this.dynamic_vertices[i * 2];
-                node.y = this.dynamic_vertices[(i * 2) + 1];
-                edges.push(node);
-                ++count;
+                var i1 = 0;
+                var i2 = 0;
+                if (!p1_ol) {
+                    i1 = p1;
+                    i2 = p2;
+                }
+                else if (!p2_ol) {
+                    i1 = p2;
+                    i2 = p3;
+                }
+                else if (!p3_ol) {
+                    i1 = p1;
+                    i2 = p3;
+                }
+                this.parent.collider_points[index] = this.dynamic_vertices[i1 * 2];
+                this.parent.collider_points[index + 1] = this.dynamic_vertices[(i1 * 2) + 1];
+                this.parent.collider_points[index + 2] = this.dynamic_vertices[i2 * 2];
+                this.parent.collider_points[index + 3] = this.dynamic_vertices[(i2 * 2) + 1];
+                index += 4;
             }
         }
-        var index = 0;
-        var node = edges[0];
-        var prev_nodes = [];
-        while (true) {
-            var closest_dist = 10000;
-            var closest_id = -1;
-            for (var i = 0; i < edges.length; ++i) {
-                if (edges[i].id == node.id)
-                    continue;
-                var found = false;
-                for (var n = 0; n < prev_nodes.length; ++n) {
-                    if (edges[i] == prev_nodes[n]) {
-                        found = true;
-                        break;
-                    }
-                }
-                if (found)
-                    continue;
-                var dist = Math.sqrt(Math.pow(edges[i].x - node.x, 2) + Math.pow(edges[i].y - node.y, 2));
-                if (dist < closest_dist) {
-                    closest_dist = dist;
-                    closest_id = i;
-                }
-            }
-            if (closest_id == -1)
-                break;
-            prev_nodes.push(node);
-            this.parent.collider_points[index] = node.x;
-            this.parent.collider_points[index + 1] = node.y;
-            node = edges[closest_id];
-            this.parent.collider_points[index + 2] = node.x;
-            this.parent.collider_points[index + 3] = node.y;
-            index += 4;
-        }
-        edges = [];
         this.parent.collider_points.length = index;
-        console.log("count: " + count + " / " + (this.dynamic_indices.length / 3));
     };
     TerrainMesh.prototype.update_geometry = function () {
         delete this.static_indices;
@@ -197,12 +166,6 @@ var Terrain = (function () {
         this.container = new PIXI.Container();
         this.pos.x = json_obj.pos[0];
         this.pos.y = -json_obj.pos[1];
-        var i = 0;
-        for (var n = 0; n < 40; n += 2) {
-            this.collider_points[i] = json_obj.collider_points[n];
-            this.collider_points[i + 1] = -json_obj.collider_points[n + 1];
-            i += 2;
-        }
         this.fill_mesh = new TerrainMesh(this, json_obj, TerrainGeometryType.FILL);
         this.edges_mesh = new TerrainMesh(this, json_obj, TerrainGeometryType.EDGES);
         this.edge_physics = new PhysicsObject(PhysicsBodyType.STATIC);

@@ -97,8 +97,7 @@ class PhysicsObject {
 
     //loops through points array and creates an edge shape for every
     //2 points in the array
-    for (var n = 0; n < points.length; n += 2) {
-      if (n + 3 >= points.length) break;
+    for (var n = 0; n < points.length; n += 4) {
       var edge_shape = new b2Shapes.b2PolygonShape();
       edge_shape.SetAsEdge(new b2Math.b2Vec2(((points[n] + pos_offset.x) * scale) * B2_METERS, (((points[n + 1] + pos_offset.y) * scale) * B2_METERS)),
                            new b2Math.b2Vec2(((points[n + 2] + pos_offset.x) * scale) * B2_METERS, (((points[n + 3] + pos_offset.y) * scale) * B2_METERS)));

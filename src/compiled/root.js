@@ -46,7 +46,7 @@ window.onload = function () {
         game_layer.addChild(terrain_container.container);
         game_layer.x = renderer.width / 2.0;
         game_layer.y = renderer.height / 2.0;
-        game_layer.pivot.x = (game_layer.width / 2.0) - 400;
+        game_layer.pivot.x = (game_layer.width / 2.0) - 800;
         game_layer.pivot.y = game_layer.height / 2.0;
         debug_layer.x = game_layer.x;
         debug_layer.y = game_layer.y;
@@ -72,7 +72,7 @@ window.onload = function () {
         var t = terrain_container.terrain_list[1];
         var x = 25;
         var y = 0;
-        var radius = 10;
+        var radius = 15;
         remove_circle_chunk(x, y, radius, t.fill_mesh);
         remove_circle_chunk(x, y, radius, t.edges_mesh);
         t.recalc_collider_points();
