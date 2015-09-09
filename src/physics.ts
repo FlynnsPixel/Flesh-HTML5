@@ -21,6 +21,7 @@ class PhysicsObject {
   body: b2Dynamics.b2Body;
   fixture: b2Dynamics.b2Fixture;
   shape: b2Shapes.b2Shape;
+  fixture_list: b2Dynamics.b2Fixture[] = [];
 
   body_type: PhysicsBodyType;
   aabb: b2Collision.b2AABB;
@@ -104,7 +105,7 @@ class PhysicsObject {
       var fixture_def = new b2Dynamics.b2FixtureDef();
       fixture_def.shape = edge_shape;
       if (n == 0) this.shape = edge_shape;
-      this.body.CreateFixture(fixture_def);
+      this.fixture_list.push(this.body.CreateFixture(fixture_def));
     }
     this.fixture = this.body.GetFixtureList();
 
@@ -126,6 +127,33 @@ class PhysicsObject {
     this.origin.y = radius;
 
     this.calculate_aabb();
+  }
+
+  /**
+  * creates edge shapes from the points array argument
+  **/
+  update_edge_at(index: number, point: b2Math.b2Vec2, scale?: number, pos_offset?: PIXI.Point) {
+    if (!scale) scale = 1;
+    if (!pos_offset) pos_offset = new PIXI.Point(0, 0);
+
+    var fixture = this.body.GetFixtureList();
+    var i = 0;
+    while (fixture) {
+      if (i == index) {
+        var shape = <b2Shapes.b2PolygonShape>fixture.GetShape();
+
+        var edge_shape = new b2Shapes.b2PolygonShape();
+        edge_shape.SetAsEdge(new b2Math.b2Vec2(((point.x + pos_offset.x) * scale) * B2_METERS, (((point.y + pos_offset.y) * scale) * B2_METERS)),
+                             shape.GetVertices()[1]);
+        var fixture_def = new b2Dynamics.b2FixtureDef();
+        fixture_def.shape = edge_shape;
+        this.body.DestroyFixture(fixture);
+        //this.body.CreateFixture(fixture_def);
+        break;
+      }
+      fixture = fixture.GetNext();
+      ++i;
+    }
   }
 
   /**
@@ -273,12 +301,13 @@ class PhysicsDebug {
         break;
       case PhysicsDebugDrawType.POLY_EDGE:
         //draws edges from shape vertices by drawing a line to each point
-        this.graphics.lineStyle(4, 0x000000, 1);
 
         var c = Math.cos(angle), s = Math.sin(angle);
         var origin_x = 0;
 
         for (var n = 0; n < verts.length; ++n) {
+          this.graphics.lineStyle(4, 0x000000, 1);
+
           var vx = verts[n].x / B2_METERS;
           var vy = verts[n].y / B2_METERS;
           var x = (pos.x / B2_METERS) + (c * (vx - origin_x) + s * vy);
@@ -287,6 +316,14 @@ class PhysicsDebug {
             this.graphics.moveTo(x, y);
           }else if (n == 1) {
             this.graphics.lineTo(x, y);
+          }
+          if (n % 2 == 1) {
+            this.graphics.beginFill(0xff0000);
+            this.graphics.lineStyle(0, 0x000000, 0);
+
+            this.graphics.drawCircle(x, y, 2);
+
+            this.graphics.endFill();
           }
         }
         break;

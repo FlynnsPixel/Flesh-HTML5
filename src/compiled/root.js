@@ -47,7 +47,7 @@ window.onload = function () {
         game_layer.addChild(terrain_container.container);
         game_layer.x = renderer.width / 2.0;
         game_layer.y = renderer.height / 2.0;
-        game_layer.pivot.x = game_layer.width / 2.0;
+        game_layer.pivot.x = (game_layer.width / 2.0) - 400;
         game_layer.pivot.y = game_layer.height / 2.0;
         debug_layer.x = game_layer.x;
         debug_layer.y = game_layer.y;
@@ -56,7 +56,6 @@ window.onload = function () {
         bunny = new PIXI.Sprite(texture_bunny);
         game_layer.addChild(bunny);
         ground = new PhysicsObject();
-        ground.create_box(100, 400);
         ground.set_pos(0 + game_layer.pivot.x - game_layer.x, 400 + game_layer.pivot.y - game_layer.y);
         ground.body.SetAngle(-55 / (180 / Math.PI));
         box1 = new PhysicsObject(PhysicsBodyType.DYNAMIC);
@@ -75,11 +74,19 @@ window.onload = function () {
         for (var n = 0; n < terrain_container.terrain_list.length; ++n) {
             edges.create_edges(terrain_container.terrain_list[n].collider_points, terrain_container.get_scale(), terrain_container.terrain_list[n].pos);
         }
+        var t = terrain_container.terrain_list[1];
         var x = 25;
         var y = 0;
         var radius = 10;
-        remove_circle_chunk(x, y, radius, terrain_container.terrain_list[1].fill_mesh);
-        remove_circle_chunk(x, y, radius, terrain_container.terrain_list[1].edges_mesh);
+        remove_circle_chunk(x, y, radius, t.fill_mesh);
+        remove_circle_chunk(x, y, radius, t.edges_mesh);
+        console.log(t.collider_points.length);
+        t.collider_points[0] = 400;
+        for (var n = 0; n < edges.fixture_list.length; ++n) {
+            edges.body.DestroyFixture(edges.fixture_list[n]);
+            if (n >= 208)
+                break;
+        }
         game_loop();
     });
 };
@@ -88,6 +95,7 @@ function remove_circle_chunk(x, y, radius, mesh) {
     var indices = mesh.dynamic_indices;
     var c_x = 0;
     var c_y = 0;
+    console.log(indices.length / 3);
     for (var n = 0; n < indices.length; ++n) {
         c_x += verts[indices[n] * 2];
         c_y += verts[(indices[n] * 2) + 1];

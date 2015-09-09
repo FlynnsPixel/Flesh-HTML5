@@ -27,24 +27,34 @@ var TerrainMesh = (function () {
         }
         var indices_start = indices_arr[0];
         var indices_size = indices_arr[1];
-        this.static_vertices = new Float32Array(json_obj.vertex_data.length);
+        if (this.type == TerrainGeometryType.EDGES)
+            indices_size = 1;
+        var min_i = 10000;
+        var max_i = -10000;
+        for (var n = 0; n < indices_size; ++n) {
+            var i = json_obj.indices[indices_start + n];
+            min_i = i < min_i ? i : min_i;
+            max_i = i > max_i ? i : max_i;
+        }
+        this.static_vertices = new Float32Array(((max_i - min_i) * 2) + 2);
         var vertices = this.static_vertices;
         for (var n = 0; n < vertices.length; ++n) {
-            vertices[n] = json_obj.vertex_data[n];
+            vertices[n] = json_obj.vertex_data[(min_i * 2) + n];
             if (n % 2 == 1)
                 vertices[n] = -vertices[n];
             this.dynamic_vertices[n] = vertices[n];
         }
+        console.log(json_obj.vertex_data.length + ", " + this.static_vertices.length);
         this.static_indices = new Uint16Array(indices_size);
         var indices = this.static_indices;
         for (var n = 0; n < indices_size; ++n) {
-            indices[n] = json_obj.indices[indices_start + n];
+            indices[n] = json_obj.indices[indices_start + n] - min_i;
             this.dynamic_indices[n] = indices[n];
         }
-        this.static_uvs = new Float32Array(json_obj.uvs.length);
+        this.static_uvs = new Float32Array(((max_i - min_i) * 2) + 2);
         var uvs = this.static_uvs;
         for (var n = 0; n < uvs.length; ++n) {
-            uvs[n] = json_obj.uvs[n];
+            uvs[n] = json_obj.uvs[(min_i * 2) + n];
             if (n % 2 == 1)
                 uvs[n] = -uvs[n];
             this.dynamic_uvs[n] = uvs[n];
@@ -91,16 +101,13 @@ var TerrainMesh = (function () {
 ;
 var Terrain = (function () {
     function Terrain(parent_obj, json_obj) {
+        this.collider_points = [];
         this.pos = new PIXI.Point(0, 0);
         this.graphics = new PIXI.Graphics();
         this.parent = parent_obj;
         this.container = new PIXI.Container();
         this.pos.x = json_obj.pos[0];
         this.pos.y = -json_obj.pos[1];
-        this.collider_points = json_obj.collider_points;
-        for (var n = 1; n < this.collider_points.length; n += 2) {
-            this.collider_points[n] = -this.collider_points[n];
-        }
         this.fill_mesh = new TerrainMesh(this, json_obj, TerrainGeometryType.FILL);
         this.edges_mesh = new TerrainMesh(this, json_obj, TerrainGeometryType.EDGES);
         debug_layer.addChild(this.graphics);
