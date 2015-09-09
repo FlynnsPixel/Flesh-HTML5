@@ -89,8 +89,8 @@ window.onload = function() {
 		var t = terrain_container.terrain_list[1];
 		var x = 25;
 		var y = 0;
-		var radius = 15;
-
+		var radius = 4;
+		
 		remove_circle_chunk(x, y, radius, t.fill_mesh);
 		remove_circle_chunk(x, y, radius, t.edges_mesh);
 
@@ -106,8 +106,6 @@ function remove_circle_chunk(x: number, y: number, radius: number, mesh: Terrain
 
 	var c_x = 0;
 	var c_y = 0;
-
-	console.log(indices.length / 3);
 
 	for (var n = 0; n < indices.length; ++n) {
 		c_x += verts[indices[n] * 2];

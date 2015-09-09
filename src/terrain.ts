@@ -38,6 +38,8 @@ class TerrainMesh {
 
 	private tex: PIXI.Texture;
 
+	private collider_index: number;
+
 	/**
 	* constructs the geometry of the passed in vertices, indices, uvs, ect
 	* which is specified with a json object (go to terrain container for more information)
@@ -110,7 +112,7 @@ class TerrainMesh {
 	}
 
 	recalc_collider_points() {
-		var index = 0;
+		this.collider_index = 0;
 		for (var n = 0; n < this.dynamic_indices.length; n += 3) {
 			var p1 = this.dynamic_indices[n];
 			var p2 = this.dynamic_indices[n + 1];
@@ -133,21 +135,20 @@ class TerrainMesh {
 				}
 			}
 			if (!p1_ol || !p2_ol || !p3_ol) {
-				var i1 = 0;
-				var i2 = 0;
-				if (!p1_ol) { i1 = p1; i2 = p2;
-				}else if (!p2_ol) { i1 = p2; i2 = p3;
-				}else if (!p3_ol) { i1 = p1; i2 = p3; }
-				
-				this.parent.collider_points[index] = this.dynamic_vertices[i1 * 2];
-				this.parent.collider_points[index + 1] = this.dynamic_vertices[(i1 * 2) + 1];
-				this.parent.collider_points[index + 2] = this.dynamic_vertices[i2 * 2];
-				this.parent.collider_points[index + 3] = this.dynamic_vertices[(i2 * 2) + 1];
-
-				index += 4;
+				if (!p1_ol) this.add_collider_points(p1, p2);
+				if (!p2_ol) this.add_collider_points(p2, p3);
+				if (!p3_ol) this.add_collider_points(p1, p3);
 			}
 		}
-		this.parent.collider_points.length = index;
+		this.parent.collider_points.length = this.collider_index;
+	}
+
+	private add_collider_points(i1, i2) {
+		this.parent.collider_points[this.collider_index] = this.dynamic_vertices[i1 * 2];
+		this.parent.collider_points[this.collider_index + 1] = this.dynamic_vertices[(i1 * 2) + 1];
+		this.parent.collider_points[this.collider_index + 2] = this.dynamic_vertices[i2 * 2];
+		this.parent.collider_points[this.collider_index + 3] = this.dynamic_vertices[(i2 * 2) + 1];
+		this.collider_index += 4;
 	}
 
 	update_geometry() {
