@@ -16,7 +16,6 @@ var bunny: PIXI.Sprite;
 var ground: PhysicsObject;
 var box1: PhysicsObject;
 var box2: PhysicsObject;
-var edges: PhysicsObject;
 
 window.onresize = function() {
 	resize_canvas();
@@ -87,12 +86,6 @@ window.onload = function() {
 		box2.body.ResetMassData();
 		box2.set_pos(250 + game_layer.pivot.x - game_layer.x, game_layer.pivot.y - game_layer.y);
 
-		edges = new PhysicsObject(PhysicsBodyType.STATIC);
-		for (var n = 0; n < terrain_container.terrain_list.length; ++n) {
-			edges.create_edges(terrain_container.terrain_list[n].collider_points,
-												 terrain_container.get_scale(), terrain_container.terrain_list[n].pos);
-		}
-
 		var t = terrain_container.terrain_list[1];
 		var x = 25;
 		var y = 0;
@@ -106,10 +99,12 @@ window.onload = function() {
 		//edges.update_edge_at(0, new b2Math.b2Vec2(t.collider_points[0], t.collider_points[1]), terrain_container.get_scale(), t.pos);
 
 		//console.log(edges.fixture_list.length);
+		/*
 		for (var n = 0; n < edges.fixture_list.length; ++n) {
 			edges.body.DestroyFixture(edges.fixture_list[n]);
 			if (n >= 208) break;
 		}
+		*/
 
 		game_loop();
 	});

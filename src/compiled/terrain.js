@@ -44,7 +44,6 @@ var TerrainMesh = (function () {
                 vertices[n] = -vertices[n];
             this.dynamic_vertices[n] = vertices[n];
         }
-        console.log(json_obj.vertex_data.length + ", " + this.static_vertices.length);
         this.static_indices = new Uint16Array(indices_size);
         var indices = this.static_indices;
         for (var n = 0; n < indices_size; ++n) {
@@ -59,11 +58,36 @@ var TerrainMesh = (function () {
                 uvs[n] = -uvs[n];
             this.dynamic_uvs[n] = uvs[n];
         }
+        if (this.type == TerrainGeometryType.FILL) {
+            this.recalc_collider_points();
+        }
         this.mesh = new PIXI.mesh.Mesh(this.tex, vertices, uvs, indices, PIXI.mesh.Mesh.DRAW_MODES.TRIANGLES);
         this.mesh.x = this.parent.pos.x;
         this.mesh.y = this.parent.pos.y;
         this.parent.container.addChild(this.mesh);
     }
+    TerrainMesh.prototype.recalc_collider_points = function () {
+        var index = 0;
+        var edges = [];
+        for (var n = 0; n < this.dynamic_indices.length; n += 3) {
+            edges.push(this.dynamic_indices[n]);
+            edges.push(this.dynamic_indices[n + 1]);
+            edges.push(this.dynamic_indices[n + 1]);
+            edges.push(this.dynamic_indices[n + 2]);
+            edges.push(this.dynamic_indices[n + 2]);
+            edges.push(this.dynamic_indices[n]);
+            for (var i = edges.length - 6; i < edges.length; i += 2) {
+                for (var l = 0; l < edges.length - 6; l += 2) {
+                    if ((edges[l] == edges[i] || edges[l + 1] == edges[i]) &&
+                        (edges[l] == edges[i + 1] || edges[l + 1] == edges[i + 1])) {
+                        edges.splice(l, 2);
+                        l -= 2;
+                    }
+                }
+            }
+        }
+        console.log("edge len: " + edges.length);
+    };
     TerrainMesh.prototype.update_geometry = function () {
         delete this.static_indices;
         this.static_indices = new Uint16Array(this.dynamic_indices);
@@ -108,8 +132,17 @@ var Terrain = (function () {
         this.container = new PIXI.Container();
         this.pos.x = json_obj.pos[0];
         this.pos.y = -json_obj.pos[1];
+        var i = 0;
+        console.log("collide len: " + json_obj.collider_points.length);
+        for (var n = 0; n < 40; n += 2) {
+            this.collider_points[i] = json_obj.collider_points[n];
+            this.collider_points[i + 1] = -json_obj.collider_points[n + 1];
+            i += 2;
+        }
         this.fill_mesh = new TerrainMesh(this, json_obj, TerrainGeometryType.FILL);
         this.edges_mesh = new TerrainMesh(this, json_obj, TerrainGeometryType.EDGES);
+        this.edge_physics = new PhysicsObject(PhysicsBodyType.STATIC);
+        this.edge_physics.create_edges(this.collider_points, this.parent.get_scale(), this.pos);
         debug_layer.addChild(this.graphics);
     }
     Terrain.prototype.debug_draw = function () {

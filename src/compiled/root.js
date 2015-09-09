@@ -13,7 +13,6 @@ var bunny;
 var ground;
 var box1;
 var box2;
-var edges;
 window.onresize = function () {
     resize_canvas();
 };
@@ -70,10 +69,6 @@ window.onload = function () {
         box2.fixture.SetRestitution(.4);
         box2.body.ResetMassData();
         box2.set_pos(250 + game_layer.pivot.x - game_layer.x, game_layer.pivot.y - game_layer.y);
-        edges = new PhysicsObject(PhysicsBodyType.STATIC);
-        for (var n = 0; n < terrain_container.terrain_list.length; ++n) {
-            edges.create_edges(terrain_container.terrain_list[n].collider_points, terrain_container.get_scale(), terrain_container.terrain_list[n].pos);
-        }
         var t = terrain_container.terrain_list[1];
         var x = 25;
         var y = 0;
@@ -82,11 +77,6 @@ window.onload = function () {
         remove_circle_chunk(x, y, radius, t.edges_mesh);
         console.log(t.collider_points.length);
         t.collider_points[0] = 400;
-        for (var n = 0; n < edges.fixture_list.length; ++n) {
-            edges.body.DestroyFixture(edges.fixture_list[n]);
-            if (n >= 208)
-                break;
-        }
         game_loop();
     });
 };
