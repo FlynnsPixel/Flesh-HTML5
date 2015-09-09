@@ -73,8 +73,6 @@ window.onload = function () {
         var x = 25;
         var y = 0;
         var radius = 10;
-        remove_circle_chunk(x, y, radius, t.fill_mesh);
-        remove_circle_chunk(x, y, radius, t.edges_mesh);
         console.log(t.collider_points.length);
         t.collider_points[0] = 400;
         game_loop();

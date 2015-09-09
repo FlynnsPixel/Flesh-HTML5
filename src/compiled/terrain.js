@@ -68,25 +68,46 @@ var TerrainMesh = (function () {
     }
     TerrainMesh.prototype.recalc_collider_points = function () {
         var index = 0;
-        var edges = [];
+        var count = 0;
         for (var n = 0; n < this.dynamic_indices.length; n += 3) {
-            edges.push(this.dynamic_indices[n]);
-            edges.push(this.dynamic_indices[n + 1]);
-            edges.push(this.dynamic_indices[n + 1]);
-            edges.push(this.dynamic_indices[n + 2]);
-            edges.push(this.dynamic_indices[n + 2]);
-            edges.push(this.dynamic_indices[n]);
-            for (var i = edges.length - 6; i < edges.length; i += 2) {
-                for (var l = 0; l < edges.length - 6; l += 2) {
-                    if ((edges[l] == edges[i] || edges[l + 1] == edges[i]) &&
-                        (edges[l] == edges[i + 1] || edges[l + 1] == edges[i + 1])) {
-                        edges.splice(l, 2);
-                        l -= 2;
-                    }
+            var p1 = this.dynamic_indices[n];
+            var p2 = this.dynamic_indices[n + 1];
+            var p3 = this.dynamic_indices[n + 2];
+            var p1_ol = false;
+            var p2_ol = false;
+            var p3_ol = false;
+            var overlapping = false;
+            for (var i = 0; i < this.dynamic_indices.length; i += 3) {
+                if (i == n)
+                    continue;
+                var i1 = this.dynamic_indices[i];
+                var i2 = this.dynamic_indices[i + 1];
+                var i3 = this.dynamic_indices[i + 2];
+                if ((p1 == i1 || p1 == i2 || p1 == i3) && (p3 == i1 || p3 == i2 || p3 == i3)) {
+                    p3_ol = true;
+                }
+                else if ((p2 == i1 || p2 == i2 || p2 == i3) && (p3 == i1 || p3 == i2 || p3 == i3)) {
+                    p2_ol = true;
+                }
+                else if ((p1 == i1 || p1 == i2 || p1 == i3) && (p2 == i1 || p2 == i2 || p2 == i3)) {
+                    p1_ol = true;
                 }
             }
+            if (!p1_ol || !p2_ol || !p3_ol) {
+                var i = 0;
+                if (!p1_ol)
+                    i = p1;
+                else if (!p2_ol)
+                    i = p2;
+                else if (!p3_ol)
+                    i = p3;
+                this.parent.collider_points[index] = this.dynamic_vertices[i * 2];
+                this.parent.collider_points[index + 1] = this.dynamic_vertices[(i * 2) + 1];
+                index += 2;
+                ++count;
+            }
         }
-        console.log("edge len: " + edges.length);
+        console.log("count: " + count + " / " + (this.dynamic_indices.length / 3));
     };
     TerrainMesh.prototype.update_geometry = function () {
         delete this.static_indices;
@@ -133,7 +154,7 @@ var Terrain = (function () {
         this.pos.x = json_obj.pos[0];
         this.pos.y = -json_obj.pos[1];
         var i = 0;
-        console.log("collide len: " + json_obj.collider_points.length);
+        console.log("collide points: " + json_obj.collider_points.length);
         for (var n = 0; n < 40; n += 2) {
             this.collider_points[i] = json_obj.collider_points[n];
             this.collider_points[i + 1] = -json_obj.collider_points[n + 1];
