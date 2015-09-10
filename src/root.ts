@@ -57,8 +57,8 @@ window.onload = function() {
 		game_layer.addChild(terrain_container.container);
 		game_layer.x = renderer.width / 2.0;
 		game_layer.y = renderer.height / 2.0;
-		game_layer.pivot.x = (game_layer.width / 2.0) - 800;
-		game_layer.pivot.y = game_layer.height / 2.0;
+		game_layer.pivot.x = (game_layer.width / 2.0);
+		game_layer.pivot.y = (game_layer.height / 2.0);
 		debug_layer.x = game_layer.x;
 		debug_layer.y = game_layer.y;
 		debug_layer.pivot.x = game_layer.pivot.x;
@@ -94,22 +94,13 @@ function remove_circle_chunk_mesh(x: number, y: number, radius: number, mesh: Te
 	var verts = mesh.dynamic_vertices;
 	var indices = mesh.dynamic_indices;
 
-	var c_x = 0;
-	var c_y = 0;
-
 	for (var n = 0; n < indices.length; ++n) {
-		c_x += (verts[indices[n] * 2] + mesh.parent.pos.x) * mesh.parent.parent.get_scale();
-		c_y += (verts[(indices[n] * 2) + 1] + mesh.parent.pos.y) * mesh.parent.parent.get_scale();
-		if (n % 3 == 2) {
-			c_x /= 3;
-			c_y /= 3;
-			var dist = Math.sqrt(Math.pow(c_x - x, 2) + Math.pow(c_y - y, 2));
-			if (dist < radius) {
-				indices.splice(n - 2, 3);
-				n -= 3;
-			}
-			c_x = 0;
-			c_y = 0;
+		var c_x = (verts[indices[n] * 2] + mesh.parent.pos.x) * mesh.parent.parent.get_scale();
+		var c_y = (verts[(indices[n] * 2) + 1] + mesh.parent.pos.y) * mesh.parent.parent.get_scale();
+		var dist = Math.sqrt(Math.pow(c_x - x, 2) + Math.pow(c_y - y, 2));
+		if (dist < radius) {
+			indices.splice(n - (n % 3), 3);
+			n -= (n % 3) + 1;
 		}
 	}
 
@@ -141,13 +132,12 @@ setInterval(function() {
 setInterval(function() {
 	var x = box1.body.GetPosition().x / B2_METERS;
 	var y = box1.body.GetPosition().y / B2_METERS;
-	var radius = 40;
+	var radius = 70;
 	remove_circle_chunk(x, y, radius);
-	remove_circle_chunk(x, y, radius);
-}, 100);
+}, 2000);
 
 function game_loop() {
-	terrain_container.debug_draw_all();
+	//terrain_container.debug_draw_all();
 
 	if (is_key_down(KeyCode.EQUALS)) {
 		dest_scale += .1;

@@ -7,6 +7,13 @@ var b2Dynamics = Box2D.Dynamics;
 var b2Contacts = Box2D.Dynamics.Contacts;
 var b2Controllers = Box2D.Dynamics.Controllers;
 var b2Joints = Box2D.Dynamics.Joints;
+var PhysicsUserData = (function () {
+    function PhysicsUserData() {
+        this.is_colliding = false;
+    }
+    return PhysicsUserData;
+})();
+;
 var PhysicsBodyType;
 (function (PhysicsBodyType) {
     PhysicsBodyType[PhysicsBodyType["STATIC"] = 0] = "STATIC";
@@ -52,6 +59,7 @@ var PhysicsObject = (function () {
         box_shape.SetAsOrientedBox(w, h, origin, 0);
         var fixture_def = new b2Dynamics.b2FixtureDef();
         fixture_def.shape = box_shape;
+        fixture_def.userData = new PhysicsUserData();
         this.shape = box_shape;
         this.body.CreateFixture(fixture_def);
         this.fixture = this.body.GetFixtureList();
@@ -67,6 +75,7 @@ var PhysicsObject = (function () {
             edge_shape.SetAsEdge(new b2Math.b2Vec2(((points[n] + pos_offset.x) * scale) * B2_METERS, (((points[n + 1] + pos_offset.y) * scale) * B2_METERS)), new b2Math.b2Vec2(((points[n + 2] + pos_offset.x) * scale) * B2_METERS, (((points[n + 3] + pos_offset.y) * scale) * B2_METERS)));
             var fixture_def = new b2Dynamics.b2FixtureDef();
             fixture_def.shape = edge_shape;
+            fixture_def.userData = new PhysicsUserData();
             if (n == 0)
                 this.shape = edge_shape;
             this.fixture_list.push(this.body.CreateFixture(fixture_def));
@@ -79,32 +88,12 @@ var PhysicsObject = (function () {
         var fixture_def = new b2Dynamics.b2FixtureDef();
         fixture_def.shape = circle_shape;
         this.shape = circle_shape;
+        fixture_def.userData = new PhysicsUserData();
         this.body.CreateFixture(fixture_def);
         this.fixture = this.body.GetFixtureList();
         this.origin.x = radius;
         this.origin.y = radius;
         this.calculate_aabb();
-    };
-    PhysicsObject.prototype.update_edge_at = function (index, point, scale, pos_offset) {
-        if (!scale)
-            scale = 1;
-        if (!pos_offset)
-            pos_offset = new PIXI.Point(0, 0);
-        var fixture = this.body.GetFixtureList();
-        var i = 0;
-        while (fixture) {
-            if (i == index) {
-                var shape = fixture.GetShape();
-                var edge_shape = new b2Shapes.b2PolygonShape();
-                edge_shape.SetAsEdge(new b2Math.b2Vec2(((point.x + pos_offset.x) * scale) * B2_METERS, (((point.y + pos_offset.y) * scale) * B2_METERS)), shape.GetVertices()[1]);
-                var fixture_def = new b2Dynamics.b2FixtureDef();
-                fixture_def.shape = edge_shape;
-                this.body.DestroyFixture(fixture);
-                break;
-            }
-            fixture = fixture.GetNext();
-            ++i;
-        }
     };
     PhysicsObject.prototype.destroy_all_fixtures = function () {
         while (this.body.GetFixtureList()) {
@@ -182,6 +171,7 @@ var PhysicsDebug = (function () {
         while (fixture) {
             var draw_type = PhysicsDebugDrawType.UNKNOWN;
             var shape_type = fixture.GetType();
+            var user_data = fixture.GetUserData();
             if (shape_type == PhysicsShapeType.POLYGON) {
                 var verts = fixture.GetShape().GetVertices();
                 if (verts.length == 2)
@@ -197,7 +187,7 @@ var PhysicsDebug = (function () {
             }
             switch (draw_type) {
                 case PhysicsDebugDrawType.POLY_BOX:
-                    this.graphics.beginFill(0x00ff00);
+                    this.graphics.beginFill(user_data.is_colliding ? 0xff0000 : 0x00ff00);
                     this.graphics.fillAlpha = .4;
                     this.graphics.lineStyle(1, 0x000000, .4);
                     var c = Math.cos(angle), s = Math.sin(angle);
@@ -217,7 +207,7 @@ var PhysicsDebug = (function () {
                     var c = Math.cos(angle), s = Math.sin(angle);
                     var origin_x = 0;
                     for (var n = 0; n < verts.length; ++n) {
-                        this.graphics.lineStyle(4, 0x000000, 1);
+                        this.graphics.lineStyle(1, user_data.is_colliding ? 0xff0000 : 0x00ff00, 1);
                         var vx = verts[n].x / B2_METERS;
                         var vy = verts[n].y / B2_METERS;
                         var x = (pos.x / B2_METERS) + (c * (vx - origin_x) + s * vy);
@@ -227,12 +217,6 @@ var PhysicsDebug = (function () {
                         }
                         else if (n == 1) {
                             this.graphics.lineTo(x, y);
-                        }
-                        if (n % 2 == 1) {
-                            this.graphics.beginFill(0xff0000);
-                            this.graphics.lineStyle(0, 0x000000, 0);
-                            this.graphics.drawCircle(x, y, 2);
-                            this.graphics.endFill();
                         }
                     }
                     break;
@@ -259,6 +243,22 @@ var vel_iterations = 6;
 var pos_iterations = 2;
 function init_physics() {
     world = new b2Dynamics.b2World(new b2Math.b2Vec2(0.0, 9.8), false);
+    var listener = new b2Dynamics.b2ContactListener();
+    listener.BeginContact = function (contact) {
+        var a = contact.GetFixtureA();
+        var b = contact.GetFixtureB();
+        a.GetUserData().is_colliding = true;
+        b.GetUserData().is_colliding = true;
+        return false;
+    };
+    listener.EndContact = function (contact) {
+        var a = contact.GetFixtureA();
+        var b = contact.GetFixtureB();
+        a.GetUserData().is_colliding = false;
+        b.GetUserData().is_colliding = false;
+        return false;
+    };
+    world.SetContactListener(listener);
 }
 function update_physics() {
     if (is_key_down(KeyCode.CTRL) && is_key_pressed(KeyCode.Q)) {

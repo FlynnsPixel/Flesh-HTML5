@@ -8,13 +8,6 @@ enum TerrainGeometryType {
 	EDGES
 };
 
-class EdgeNode {
-
-	id: number;
-	x: number;
-	y: number;
-};
-
 /**
 * terrain mesh handles a geometric part of a
 * terrain object (either fill or edges).
@@ -62,7 +55,7 @@ class TerrainMesh {
 		var indices_start = indices_arr[0];
 		var indices_size = indices_arr[1];
 
-		if (this.type == TerrainGeometryType.EDGES) indices_size = 1;
+		//if (this.type == TerrainGeometryType.FILL) indices_size = 1;
 
 		//calculates the min and max indices.
 		//the maximum index is the maximum vertex value referenced, whereas
@@ -111,7 +104,14 @@ class TerrainMesh {
 		this.parent.container.addChild(this.mesh);
 	}
 
+	/**
+	* recalculates the parent collider points array by performing
+	* edge detection around this mesh
+	**/
 	recalc_collider_points() {
+		//loops through every tri to find any sides which aren't overlapped
+		//by another tri. if they aren't overlapped, it's an edge and the sides
+		//get added to the collider points
 		this.collider_index = 0;
 		for (var n = 0; n < this.dynamic_indices.length; n += 3) {
 			var p1 = this.dynamic_indices[n];
@@ -120,7 +120,6 @@ class TerrainMesh {
 			var p1_ol = false;
 			var p2_ol = false;
 			var p3_ol = false;
-			var overlapping = false;
 			for (var i = 0; i < this.dynamic_indices.length; i += 3) {
 				if (i == n) continue;
 				var i1 = this.dynamic_indices[i];
@@ -134,15 +133,16 @@ class TerrainMesh {
 					p1_ol = true;
 				}
 			}
-			if (!p1_ol || !p2_ol || !p3_ol) {
-				if (!p1_ol) this.add_collider_points(p1, p2);
-				if (!p2_ol) this.add_collider_points(p2, p3);
-				if (!p3_ol) this.add_collider_points(p1, p3);
-			}
+			if (!p1_ol) this.add_collider_points(p1, p2);
+			if (!p2_ol) this.add_collider_points(p2, p3);
+			if (!p3_ol) this.add_collider_points(p1, p3);
 		}
 		this.parent.collider_points.length = this.collider_index;
 	}
 
+	/**
+	* given 2 indices, adds 4 collider points (x, y)
+	**/
 	private add_collider_points(i1, i2) {
 		this.parent.collider_points[this.collider_index] = this.dynamic_vertices[i1 * 2];
 		this.parent.collider_points[this.collider_index + 1] = this.dynamic_vertices[(i1 * 2) + 1];
@@ -151,7 +151,11 @@ class TerrainMesh {
 		this.collider_index += 4;
 	}
 
+	/**
+	* update static indices on mesh from dynamic indices
+	**/
 	update_indices() {
+		//deletes static indices and allocates it again from dynamic indices
 		delete this.static_indices;
 		this.static_indices = new Uint16Array(this.dynamic_indices);
 		this.mesh.indices = this.static_indices;

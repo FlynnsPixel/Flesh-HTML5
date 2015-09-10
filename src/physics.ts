@@ -9,6 +9,11 @@ import b2Contacts = Box2D.Dynamics.Contacts;
 import b2Controllers = Box2D.Dynamics.Controllers;
 import b2Joints = Box2D.Dynamics.Joints;
 
+class PhysicsUserData {
+
+  is_colliding = false;
+};
+
 enum PhysicsBodyType {
   STATIC,
   KINETIC,
@@ -82,6 +87,7 @@ class PhysicsObject {
 
     var fixture_def = new b2Dynamics.b2FixtureDef();
 		fixture_def.shape = box_shape;
+    fixture_def.userData = new PhysicsUserData();
     this.shape = box_shape;
     this.body.CreateFixture(fixture_def);
     this.fixture = this.body.GetFixtureList();
@@ -103,6 +109,7 @@ class PhysicsObject {
                            new b2Math.b2Vec2(((points[n + 2] + pos_offset.x) * scale) * B2_METERS, (((points[n + 3] + pos_offset.y) * scale) * B2_METERS)));
       var fixture_def = new b2Dynamics.b2FixtureDef();
       fixture_def.shape = edge_shape;
+      fixture_def.userData = new PhysicsUserData();
       if (n == 0) this.shape = edge_shape;
       this.fixture_list.push(this.body.CreateFixture(fixture_def));
     }
@@ -119,6 +126,7 @@ class PhysicsObject {
     var fixture_def = new b2Dynamics.b2FixtureDef();
     fixture_def.shape = circle_shape;
     this.shape = circle_shape;
+    fixture_def.userData = new PhysicsUserData();
     this.body.CreateFixture(fixture_def);
     this.fixture = this.body.GetFixtureList();
 
@@ -126,33 +134,6 @@ class PhysicsObject {
     this.origin.y = radius;
 
     this.calculate_aabb();
-  }
-
-  /**
-  * creates edge shapes from the points array argument
-  **/
-  update_edge_at(index: number, point: b2Math.b2Vec2, scale?: number, pos_offset?: PIXI.Point) {
-    if (!scale) scale = 1;
-    if (!pos_offset) pos_offset = new PIXI.Point(0, 0);
-
-    var fixture = this.body.GetFixtureList();
-    var i = 0;
-    while (fixture) {
-      if (i == index) {
-        var shape = <b2Shapes.b2PolygonShape>fixture.GetShape();
-
-        var edge_shape = new b2Shapes.b2PolygonShape();
-        edge_shape.SetAsEdge(new b2Math.b2Vec2(((point.x + pos_offset.x) * scale) * B2_METERS, (((point.y + pos_offset.y) * scale) * B2_METERS)),
-                             shape.GetVertices()[1]);
-        var fixture_def = new b2Dynamics.b2FixtureDef();
-        fixture_def.shape = edge_shape;
-        this.body.DestroyFixture(fixture);
-        //this.body.CreateFixture(fixture_def);
-        break;
-      }
-      fixture = fixture.GetNext();
-      ++i;
-    }
   }
 
   /**
@@ -275,6 +256,7 @@ class PhysicsDebug {
     while (fixture) {
       var draw_type = PhysicsDebugDrawType.UNKNOWN;
       var shape_type = fixture.GetType();
+      var user_data = fixture.GetUserData();
 
       //calculates draw type from the fixture shape and shape type
       if (shape_type == PhysicsShapeType.POLYGON) {
@@ -291,7 +273,7 @@ class PhysicsDebug {
       switch (draw_type) {
       case PhysicsDebugDrawType.POLY_BOX:
         //draws a box from shape vertices and rotate it with it's origin point
-        this.graphics.beginFill(0x00ff00);
+        this.graphics.beginFill(user_data.is_colliding ? 0xff0000 : 0x00ff00);
         this.graphics.fillAlpha = .4;
         this.graphics.lineStyle(1, 0x000000, .4);
 
@@ -314,7 +296,7 @@ class PhysicsDebug {
         var origin_x = 0;
 
         for (var n = 0; n < verts.length; ++n) {
-          this.graphics.lineStyle(4, 0x000000, 1);
+          this.graphics.lineStyle(1, user_data.is_colliding ? 0xff0000 : 0x00ff00, 1);
 
           var vx = verts[n].x / B2_METERS;
           var vy = verts[n].y / B2_METERS;
@@ -325,6 +307,7 @@ class PhysicsDebug {
           }else if (n == 1) {
             this.graphics.lineTo(x, y);
           }
+          /*
           if (n % 2 == 1) {
             this.graphics.beginFill(0xff0000);
             this.graphics.lineStyle(0, 0x000000, 0);
@@ -333,6 +316,7 @@ class PhysicsDebug {
 
             this.graphics.endFill();
           }
+          */
         }
         break;
       case PhysicsDebugDrawType.CIRCLE:
@@ -365,6 +349,23 @@ var pos_iterations = 2;
 
 function init_physics() {
   world = new b2Dynamics.b2World(new b2Math.b2Vec2(0.0, 9.8), false);
+
+  var listener = new b2Dynamics.b2ContactListener();
+  listener.BeginContact = function (contact) {
+    var a = contact.GetFixtureA();
+    var b = contact.GetFixtureB();
+    a.GetUserData().is_colliding = true;
+    b.GetUserData().is_colliding = true;
+    return false;
+  }
+  listener.EndContact = function (contact) {
+    var a = contact.GetFixtureA();
+    var b = contact.GetFixtureB();
+    a.GetUserData().is_colliding = false;
+    b.GetUserData().is_colliding = false;
+    return false;
+  }
+  world.SetContactListener(listener);
 }
 
 function update_physics() {

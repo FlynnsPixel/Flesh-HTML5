@@ -18,7 +18,7 @@ function init_assets(callback) {
 	load_tex("assets/forest_fill.png", 							function(tex) { texture_forest_fill = tex; });
 	load_tex("assets/forest_edges.png", 						function(tex) { texture_forest_edges = tex; });
 
-	load_raw("assets/terrain4.txt", 									function(raw) { raw_terrain = raw; });
+	load_raw("assets/terrain24.txt", 									function(raw) { raw_terrain = raw; });
 
 	PIXI.loader.load(function(loader, resources) {
 		console.log("assets initialised");

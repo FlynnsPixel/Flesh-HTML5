@@ -7,12 +7,6 @@ var TerrainGeometryType;
     TerrainGeometryType[TerrainGeometryType["EDGES"] = 1] = "EDGES";
 })(TerrainGeometryType || (TerrainGeometryType = {}));
 ;
-var EdgeNode = (function () {
-    function EdgeNode() {
-    }
-    return EdgeNode;
-})();
-;
 var TerrainMesh = (function () {
     function TerrainMesh(parent_obj, json_obj, geometry_type) {
         this.dynamic_vertices = [];
@@ -33,8 +27,6 @@ var TerrainMesh = (function () {
         }
         var indices_start = indices_arr[0];
         var indices_size = indices_arr[1];
-        if (this.type == TerrainGeometryType.EDGES)
-            indices_size = 1;
         var min_i = 10000;
         var max_i = -10000;
         for (var n = 0; n < indices_size; ++n) {
@@ -81,7 +73,6 @@ var TerrainMesh = (function () {
             var p1_ol = false;
             var p2_ol = false;
             var p3_ol = false;
-            var overlapping = false;
             for (var i = 0; i < this.dynamic_indices.length; i += 3) {
                 if (i == n)
                     continue;
@@ -98,14 +89,12 @@ var TerrainMesh = (function () {
                     p1_ol = true;
                 }
             }
-            if (!p1_ol || !p2_ol || !p3_ol) {
-                if (!p1_ol)
-                    this.add_collider_points(p1, p2);
-                if (!p2_ol)
-                    this.add_collider_points(p2, p3);
-                if (!p3_ol)
-                    this.add_collider_points(p1, p3);
-            }
+            if (!p1_ol)
+                this.add_collider_points(p1, p2);
+            if (!p2_ol)
+                this.add_collider_points(p2, p3);
+            if (!p3_ol)
+                this.add_collider_points(p1, p3);
         }
         this.parent.collider_points.length = this.collider_index;
     };
