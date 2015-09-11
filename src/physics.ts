@@ -380,7 +380,7 @@ function update_physics() {
     }
   }
 
-  world.Step(1.0 / fps, vel_iterations, pos_iterations);
+  world.Step(1.0 / (fps || 1), vel_iterations, pos_iterations);
 
   for (var n = 0; n < physics_objects.length; ++n) {
     physics_objects[n].update();

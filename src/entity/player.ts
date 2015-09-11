@@ -14,39 +14,54 @@ class PlayerDisplayComponent extends DisplayComponent {
 class PlayerMotionComponent extends MotionComponent {
 
   display: PlayerDisplayComponent;
+  physics: PhysicsObject;
 
   init() {
     this.display = <PlayerDisplayComponent>this.parent.get(ComponentType.DISPLAY);
+
+    this.physics = new PhysicsObject(PhysicsBodyType.DYNAMIC);
+		this.physics.create_circle(16);
+		this.physics.body.ResetMassData();
+		this.physics.body.SetFixedRotation(true);
+		this.physics.set_pos(400 + game_layer.pivot.x - game_layer.x, 200 + game_layer.pivot.y - game_layer.y);
+
+    var p = this.physics;
+    setInterval(function() {
+      var x = p.body.GetPosition().x / B2_METERS;
+    	var y = p.body.GetPosition().y / B2_METERS;
+    	var radius = 70;
+    	remove_circle_chunk(x, y, radius);
+    }, 1000);
   }
 
   update() {
     if (is_key_pressed(KeyCode.UP_ARROW)) {
-      var v = box1.body.GetLinearVelocity();
+      var v = this.physics.body.GetLinearVelocity();
       v.y = -4;
-      box1.body.SetLinearVelocity(v);
+      this.physics.body.SetLinearVelocity(v);
     }
 
-    var v = box1.body.GetLinearVelocity();
-    var av = box1.body.GetAngularVelocity();
+    var v = this.physics.body.GetLinearVelocity();
+    var av = this.physics.body.GetAngularVelocity();
     var inputting = false;
-    box1.fixture.SetFriction(120.0);
+    this.physics.fixture.SetFriction(120.0);
     if (is_key_down(KeyCode.LEFT_ARROW)) {
       v.x = -2;
       inputting = true;
-      box1.fixture.SetFriction(.1);
+      this.physics.fixture.SetFriction(.1);
     }else if (is_key_down(KeyCode.RIGHT_ARROW)) {
       v.x = 2;
       inputting = true;
-      box1.fixture.SetFriction(.1);
+      this.physics.fixture.SetFriction(.1);
     }
-    box1.body.ResetMassData();
+    this.physics.body.ResetMassData();
 
     v.x = Math.max(v.x, -10) * .9;
     v.x = Math.min(v.x, 10) * .9;
     v.y = Math.max(v.y, -10) * .99;
     v.y = Math.min(v.y, 10) * .99;
 
-    box1.set_sprite_pos(this.display.base, false);
+    this.physics.set_sprite_pos(this.display.base, false);
   }
 };
 

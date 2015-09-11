@@ -50,41 +50,27 @@ window.onload = function() {
 		init_physics();
 		init_input();
 
-		create_player();
-
 		var terrain_arr = JSON.parse(raw_terrain).terrain;
 		terrain_container = new TerrainContainer(terrain_arr);
 		game_layer.addChild(terrain_container.container);
-		game_layer.x = renderer.width / 2.0;
-		game_layer.y = renderer.height / 2.0;
-		game_layer.pivot.x = (game_layer.width / 2.0);
-		game_layer.pivot.y = (game_layer.height / 2.0);
-		debug_layer.x = game_layer.x;
-		debug_layer.y = game_layer.y;
-		debug_layer.pivot.x = game_layer.pivot.x;
-		debug_layer.pivot.y = game_layer.pivot.y;
 
-		ground = new PhysicsObject();
-		//ground.create_box(100, 400);
-		ground.set_pos(0 + game_layer.pivot.x - game_layer.x, 400 + game_layer.pivot.y - game_layer.y);
-		ground.body.SetAngle(-55 / (180 / Math.PI));
+		set_game_pivot(terrain_container.container.width / 2, terrain_container.container.height / 2);
 
-		box1 = new PhysicsObject(PhysicsBodyType.DYNAMIC);
-		box1.create_circle(16);
-		box1.body.ResetMassData();
-		box1.body.SetFixedRotation(true);
-		box1.set_pos(400 + game_layer.pivot.x - game_layer.x, 200 + game_layer.pivot.y - game_layer.y);
-
-		box2 = new PhysicsObject(PhysicsBodyType.DYNAMIC);
-		box2.create_box(32, 32);
-		box2.fixture.SetDensity(.5);
-		box2.fixture.SetFriction(.5);
-		box2.fixture.SetRestitution(.4);
-		box2.body.ResetMassData();
-		box2.set_pos(250 + game_layer.pivot.x - game_layer.x, game_layer.pivot.y - game_layer.y);
+		create_player();
 
 		game_loop();
 	});
+}
+
+function set_game_pivot(x: number, y: number) {
+	game_layer.x = renderer.width / 2.0;
+	game_layer.y = renderer.height / 2.0;
+	game_layer.pivot.x = x;
+	game_layer.pivot.y = y;
+	debug_layer.x = game_layer.x;
+	debug_layer.y = game_layer.y;
+	debug_layer.pivot.x = game_layer.pivot.x;
+	debug_layer.pivot.y = game_layer.pivot.y;
 }
 
 function remove_circle_chunk_mesh(x: number, y: number, radius: number, mesh: TerrainMesh) {
@@ -126,16 +112,13 @@ setInterval(function() {
 	frame_count = 0;
 }, 1000);
 
-setInterval(function() {
-	var x = box1.body.GetPosition().x / B2_METERS;
-	var y = box1.body.GetPosition().y / B2_METERS;
-	var radius = 70;
-	remove_circle_chunk(x, y, radius);
-}, 2000);
-
 function game_loop() {
 	var start_time = new Date().getTime();
 	//terrain_container.debug_draw_all();
+
+	update_physics();
+	update_entities();
+	update_input();
 
 	if (is_key_down(KeyCode.EQUALS)) {
 		dest_scale += .1;
@@ -167,8 +150,4 @@ function game_loop() {
 	}else {
 		setTimeout(game_loop, (time_step * 1000.0) - dt);
 	}
-
-	update_physics();
-	update_entities();
-	update_input();
 }
