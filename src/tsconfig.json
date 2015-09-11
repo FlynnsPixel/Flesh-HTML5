@@ -22,6 +22,9 @@
     ],
     "files": [
         "./assets.ts",
+        "./entity/base_components.ts",
+        "./entity/entity.ts",
+        "./entity/player.ts",
         "./input.ts",
         "./physics.ts",
         "./root.ts",

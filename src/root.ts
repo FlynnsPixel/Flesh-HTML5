@@ -11,8 +11,6 @@ var debug_layer: PIXI.Container;
 var ui_layer: PIXI.Container;
 var terrain_container: TerrainContainer;
 
-var bunny: PIXI.Sprite;
-
 var ground: PhysicsObject;
 var box1: PhysicsObject;
 var box2: PhysicsObject;
@@ -52,6 +50,8 @@ window.onload = function() {
 		init_physics();
 		init_input();
 
+		create_player();
+		
 		var terrain_arr = JSON.parse(raw_terrain).terrain;
 		terrain_container = new TerrainContainer(terrain_arr);
 		game_layer.addChild(terrain_container.container);
@@ -63,9 +63,6 @@ window.onload = function() {
 		debug_layer.y = game_layer.y;
 		debug_layer.pivot.x = game_layer.pivot.x;
 		debug_layer.pivot.y = game_layer.pivot.y;
-
-		bunny = new PIXI.Sprite(texture_bunny);
-		game_layer.addChild(bunny);
 
 		ground = new PhysicsObject();
 		//ground.create_box(100, 400);
@@ -137,6 +134,7 @@ setInterval(function() {
 }, 2000);
 
 function game_loop() {
+	var start_time = new Date().getTime();
 	//terrain_container.debug_draw_all();
 
 	if (is_key_down(KeyCode.EQUALS)) {
@@ -150,36 +148,6 @@ function game_loop() {
 
 	dest_scale = (dest_scale < .1 ) ? .1 : dest_scale;
 	dest_scale = (dest_scale > 2) ? 2 : dest_scale;
-
-	if (is_key_pressed(KeyCode.UP_ARROW)) {
-		var v = box1.body.GetLinearVelocity();
-		v.y = -4;
-		box1.body.SetLinearVelocity(v);
-	}
-
-	var start_time = new Date().getTime();
-
-	var v = box1.body.GetLinearVelocity();
-	var av = box1.body.GetAngularVelocity();
-	var inputting = false;
-	box1.fixture.SetFriction(120.0);
-	if (is_key_down(KeyCode.LEFT_ARROW)) {
-		v.x = -2;
-		inputting = true;
-		box1.fixture.SetFriction(.1);
-	}else if (is_key_down(KeyCode.RIGHT_ARROW)) {
-		v.x = 2;
-		inputting = true;
-		box1.fixture.SetFriction(.1);
-	}
-	box1.body.ResetMassData();
-
-	v.x = Math.max(v.x, -10) * .9;
-	v.x = Math.min(v.x, 10) * .9;
-	v.y = Math.max(v.y, -10) * .99;
-	v.y = Math.min(v.y, 10) * .99;
-
-	box1.set_sprite_pos(bunny, false);
 
 	game_layer.scale.x -= (game_layer.scale.x - dest_scale) / 4.0;
 	game_layer.scale.y -= (game_layer.scale.y - dest_scale) / 4.0;

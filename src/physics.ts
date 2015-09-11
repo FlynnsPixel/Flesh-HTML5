@@ -323,7 +323,7 @@ class PhysicsDebug {
         var circle_shape = <b2Shapes.b2CircleShape>fixture.GetShape();
 
         //draws edges from shape vertices by drawing a line to each point
-        this.graphics.beginFill(0x00ff00);
+        this.graphics.beginFill(user_data.is_colliding ? 0xff0000 : 0x00ff00, 1);
         this.graphics.fillAlpha = .4;
         this.graphics.lineStyle(1, 0x000000, .4);
 

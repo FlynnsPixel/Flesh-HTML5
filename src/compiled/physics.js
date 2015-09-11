@@ -222,7 +222,7 @@ var PhysicsDebug = (function () {
                     break;
                 case PhysicsDebugDrawType.CIRCLE:
                     var circle_shape = fixture.GetShape();
-                    this.graphics.beginFill(0x00ff00);
+                    this.graphics.beginFill(user_data.is_colliding ? 0xff0000 : 0x00ff00, 1);
                     this.graphics.fillAlpha = .4;
                     this.graphics.lineStyle(1, 0x000000, .4);
                     this.graphics.drawCircle(pos.x / B2_METERS, pos.y / B2_METERS, circle_shape.GetRadius() / B2_METERS);
