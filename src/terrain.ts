@@ -152,6 +152,26 @@ class TerrainMesh {
 	}
 
 	/**
+	* removes a circle chunk in this mesh
+	**/
+	remove_circle_chunk(x: number, y: number, radius: number) {
+		var verts = this.dynamic_vertices;
+		var indices = this.dynamic_indices;
+
+		for (var n = 0; n < indices.length; ++n) {
+			var c_x = (verts[indices[n] * 2] + this.parent.pos.x) * this.parent.parent.get_scale();
+			var c_y = (verts[(indices[n] * 2) + 1] + this.parent.pos.y) * this.parent.parent.get_scale();
+			var dist = Math.sqrt(Math.pow(c_x - x, 2) + Math.pow(c_y - y, 2));
+			if (dist < radius) {
+				indices.splice(n - (n % 3), 3);
+				n -= (n % 3) + 1;
+			}
+		}
+
+		this.update_indices();
+	}
+
+	/**
 	* update static indices on mesh from dynamic indices
 	**/
 	update_indices() {
@@ -230,11 +250,24 @@ class Terrain {
 		debug_layer.addChild(this.graphics);
 	}
 
+	/**
+	* recalculates collider points and then destroys the edge_physics objects
+	* and recreates it with the new points
+	**/
 	recalc_collider_points() {
 		this.fill_mesh.recalc_collider_points();
 
 		this.edge_physics.destroy_all_fixtures();
 		this.edge_physics.create_edges(this.collider_points, this.parent.get_scale(), this.pos);
+	}
+
+	/**
+	* removes a circle chunk of terrain of both the fill and edges mesh
+	**/
+	remove_circle_chunk(x: number, y: number, radius: number) {
+		this.fill_mesh.remove_circle_chunk(x, y, radius);
+		this.edges_mesh.remove_circle_chunk(x, y, radius);
+		this.recalc_collider_points();
 	}
 
 	/**
@@ -281,6 +314,15 @@ class TerrainContainer {
 		var bounds = this.container.getBounds();
 		bounds.x *= this.scale; bounds.y *= this.scale;
 		bounds.width *= this.scale; bounds.height *= this.scale;
+	}
+
+	/**
+	* removes a circle chunk in all terrains
+	**/
+	remove_circle_chunk(x: number, y: number, radius: number) {
+		for (var i = 0; i < this.terrain_list.length; ++i) {
+			this.terrain_list[i].remove_circle_chunk(x, y, radius);
+		}
 	}
 
 	/**

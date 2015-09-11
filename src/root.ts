@@ -73,31 +73,6 @@ function set_game_pivot(x: number, y: number) {
 	debug_layer.pivot.y = game_layer.pivot.y;
 }
 
-function remove_circle_chunk_mesh(x: number, y: number, radius: number, mesh: TerrainMesh) {
-	var verts = mesh.dynamic_vertices;
-	var indices = mesh.dynamic_indices;
-
-	for (var n = 0; n < indices.length; ++n) {
-		var c_x = (verts[indices[n] * 2] + mesh.parent.pos.x) * mesh.parent.parent.get_scale();
-		var c_y = (verts[(indices[n] * 2) + 1] + mesh.parent.pos.y) * mesh.parent.parent.get_scale();
-		var dist = Math.sqrt(Math.pow(c_x - x, 2) + Math.pow(c_y - y, 2));
-		if (dist < radius) {
-			indices.splice(n - (n % 3), 3);
-			n -= (n % 3) + 1;
-		}
-	}
-
-	mesh.update_indices();
-}
-
-function remove_circle_chunk(x: number, y: number, radius: number) {
-	for (var i = 0; i < terrain_container.terrain_list.length; ++i) {
-		remove_circle_chunk_mesh(x, y, radius, terrain_container.terrain_list[i].fill_mesh);
-		remove_circle_chunk_mesh(x, y, radius, terrain_container.terrain_list[i].edges_mesh);
-		terrain_container.terrain_list[i].recalc_collider_points();
-	}
-}
-
 var fps = 0;
 var fps_accum = 0;
 var ms_accum = 0;

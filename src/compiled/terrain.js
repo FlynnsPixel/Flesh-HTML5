@@ -105,6 +105,20 @@ var TerrainMesh = (function () {
         this.parent.collider_points[this.collider_index + 3] = this.dynamic_vertices[(i2 * 2) + 1];
         this.collider_index += 4;
     };
+    TerrainMesh.prototype.remove_circle_chunk = function (x, y, radius) {
+        var verts = this.dynamic_vertices;
+        var indices = this.dynamic_indices;
+        for (var n = 0; n < indices.length; ++n) {
+            var c_x = (verts[indices[n] * 2] + this.parent.pos.x) * this.parent.parent.get_scale();
+            var c_y = (verts[(indices[n] * 2) + 1] + this.parent.pos.y) * this.parent.parent.get_scale();
+            var dist = Math.sqrt(Math.pow(c_x - x, 2) + Math.pow(c_y - y, 2));
+            if (dist < radius) {
+                indices.splice(n - (n % 3), 3);
+                n -= (n % 3) + 1;
+            }
+        }
+        this.update_indices();
+    };
     TerrainMesh.prototype.update_indices = function () {
         delete this.static_indices;
         this.static_indices = new Uint16Array(this.dynamic_indices);
@@ -160,6 +174,11 @@ var Terrain = (function () {
         this.edge_physics.destroy_all_fixtures();
         this.edge_physics.create_edges(this.collider_points, this.parent.get_scale(), this.pos);
     };
+    Terrain.prototype.remove_circle_chunk = function (x, y, radius) {
+        this.fill_mesh.remove_circle_chunk(x, y, radius);
+        this.edges_mesh.remove_circle_chunk(x, y, radius);
+        this.recalc_collider_points();
+    };
     Terrain.prototype.debug_draw = function () {
         this.graphics.clear();
         this.graphics.lineStyle(1, 0x0000ff, 1);
@@ -188,6 +207,11 @@ var TerrainContainer = (function () {
         bounds.width *= this.scale;
         bounds.height *= this.scale;
     }
+    TerrainContainer.prototype.remove_circle_chunk = function (x, y, radius) {
+        for (var i = 0; i < this.terrain_list.length; ++i) {
+            this.terrain_list[i].remove_circle_chunk(x, y, radius);
+        }
+    };
     TerrainContainer.prototype.debug_draw_all = function () {
         for (var n = 0; n < this.terrain_list.length; ++n) {
             this.terrain_list[n].debug_draw();

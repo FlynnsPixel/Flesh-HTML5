@@ -34,7 +34,7 @@ var PlayerMotionComponent = (function (_super) {
             var x = p.body.GetPosition().x / B2_METERS;
             var y = p.body.GetPosition().y / B2_METERS;
             var radius = 70;
-            remove_circle_chunk(x, y, radius);
+            terrain_container.remove_circle_chunk(x, y, radius);
         }, 1000);
     };
     PlayerMotionComponent.prototype.update = function () {
