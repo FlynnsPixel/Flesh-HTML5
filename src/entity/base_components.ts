@@ -8,14 +8,12 @@ enum ComponentType {
 
 abstract class BaseComponent {
 
+  parent: Entity;
   type: ComponentType = ComponentType.UNKNOWN;
-
-  private inited = false;
+  inited = false;
 
   abstract init();
   abstract update();
-
-  has_init() { return this.inited; }
 };
 
 abstract class DisplayComponent extends BaseComponent {

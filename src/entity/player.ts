@@ -13,7 +13,6 @@ class PlayerDisplayComponent extends DisplayComponent {
 
 class PlayerMotionComponent extends MotionComponent {
 
-  parent: Entity;
   display: PlayerDisplayComponent;
 
   init() {

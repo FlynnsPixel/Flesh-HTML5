@@ -51,7 +51,7 @@ window.onload = function() {
 		init_input();
 
 		create_player();
-		
+
 		var terrain_arr = JSON.parse(raw_terrain).terrain;
 		terrain_container = new TerrainContainer(terrain_arr);
 		game_layer.addChild(terrain_container.container);
@@ -76,7 +76,7 @@ window.onload = function() {
 		box1.set_pos(400 + game_layer.pivot.x - game_layer.x, 200 + game_layer.pivot.y - game_layer.y);
 
 		box2 = new PhysicsObject(PhysicsBodyType.DYNAMIC);
-		box2.create_box(bunny.width, bunny.height);
+		box2.create_box(32, 32);
 		box2.fixture.SetDensity(.5);
 		box2.fixture.SetFriction(.5);
 		box2.fixture.SetRestitution(.4);
@@ -169,5 +169,6 @@ function game_loop() {
 	}
 
 	update_physics();
+	update_entities();
 	update_input();
 }

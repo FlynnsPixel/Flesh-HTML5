@@ -15,7 +15,6 @@ var BaseComponent = (function () {
         this.type = ComponentType.UNKNOWN;
         this.inited = false;
     }
-    BaseComponent.prototype.has_init = function () { return this.inited; };
     return BaseComponent;
 })();
 ;
