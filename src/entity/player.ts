@@ -25,13 +25,13 @@ class PlayerMotionComponent extends MotionComponent {
 		this.physics.body.SetFixedRotation(true);
 		this.physics.set_pos(400 + game_layer.pivot.x - game_layer.x, 200 + game_layer.pivot.y - game_layer.y);
 
-    var p = this.physics;
+    /*var p = this.physics;
     setInterval(function() {
       var x = p.body.GetPosition().x / B2_METERS;
     	var y = p.body.GetPosition().y / B2_METERS;
     	var radius = 70;
     	terrain_container.remove_circle_chunk(x, y, radius);
-    }, 1000);
+    }, 1000);*/
   }
 
   update() {
